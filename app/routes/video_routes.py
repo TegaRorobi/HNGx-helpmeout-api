@@ -352,7 +352,7 @@ def update_title(video_id: str, title: str, db: Session = Depends(get_db)):
     return {"msg": "Title updated successfully!"}
 
 
-@router.patch("/videos/transfer/from-{username1}/to-{username2}")
+@router.patch("/videos/transfer/")
 def transfer_videos(
     username1: str, username2: str, db: Session = Depends(get_db)
 ):
