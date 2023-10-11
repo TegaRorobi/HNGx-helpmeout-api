@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 import os
 from app.database import get_db
-from app.services.services import is_logged_in, hash_password, create_access_token
+from app.services.services import is_logged_in, hash_password
 from fastapi_sso.sso.google import GoogleSSO
 from fastapi_sso.sso.facebook import FacebookSSO
 from fastapi.responses import RedirectResponse
@@ -37,8 +37,8 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 FACEBOOK_CLIENT_ID = os.getenv("FACEBOOK_CLIENT_ID")
 FACEBOOK_CLIENT_SECRET = os.getenv("FACEBOOK_CLIENT_SECRET")
 
-GOOGLE_REDIRECT_URL = "http://127.0.0.1:8000/srce/api/google/callback/"
-FACEBOOK_REDIRECT_URL = "http://127.0.0.1:8000/srce/api/facebook/callback/"
+GOOGLE_REDIRECT_URL = "https://cofucan.tech/srce/api/google/login/"
+FACEBOOK_REDIRECT_URL = "https://cofucan.tech/srce/api/facebook/login/"
 
 #Ensuring oauthlib allows http protocol for testing
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
@@ -200,7 +200,7 @@ async def google_callback(request: Request, db: Session = Depends(get_db)) -> Us
 
     if user_is_loggedin:
         return UserResponse(
-            status_code=401, message="User Already Logged in", data=None
+            status_code=401, message="A User is Already Logged in", data=None
         )
     
     with google_sso:
