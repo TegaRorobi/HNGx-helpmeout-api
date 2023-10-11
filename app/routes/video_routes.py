@@ -28,6 +28,9 @@ from app.services.services import (
 
 router = APIRouter(prefix="/srce/api")
 
+@router.get("/")
+async def home():
+    return {"Message": "NOTHING LIKE 127.0.0.1"}
 
 @router.post("/start-recording/")
 def start_recording(
