@@ -416,11 +416,12 @@ async def send_email(
     if video.status == "processing":
         raise HTTPException(status_code=404, detail="Video not processed yet.")
 
-    nessqge = MessageSchema(
+    message = MessageSchema(
         subject= f"Recording {video.title}",
         recipients=[email],
         body=f"Hi, \n\nHere is your recording {video.title}.\n\nBest regards,\nSRCE Team",
         attachments=[str(video.original_location)],
+        subtype="html",
     )
 
     email = FastMail(conf)

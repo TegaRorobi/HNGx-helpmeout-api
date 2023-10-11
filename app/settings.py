@@ -20,12 +20,12 @@ COMPRESSED_DIR = f"{MEDIA_DIR}/compressed/"
 THUMBNAIL_DIR = f"{MEDIA_DIR}/thumbnails/"
 
 conf = ConnectionConfig(
-    MAIL_USERNAME = "YourUsername",
-    MAIL_PASSWORD = "strong_password",
-    MAIL_FROM = "your@email.com",
+    MAIL_USERNAME = "helpmeout.hngx@gmail.com",
+    MAIL_PASSWORD = "Helpmeout.HNGX",
+    MAIL_FROM = "helpmeout.hngx@gmail.com",
     MAIL_PORT = 587,
-    MAIL_SERVER = "your mail server",
-    MAIL_TLS = True,
-    MAIL_SSL = False,
+    MAIL_SERVER = "smtp.gmail.com",
+    MAIL_STARTTLS = True,
+    MAIL_SSL_TLS = False,
     USE_CREDENTIALS = True
 )
