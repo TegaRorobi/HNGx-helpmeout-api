@@ -6,8 +6,8 @@ import requests
 
 
 # Configuration
-# VIDEO_FILE_PATH = "/home/cofucan/Videos/proj_demo.mp4"
-VIDEO_FILE_PATH = "/home/destinedcodes/video2.mp4"
+VIDEO_FILE_PATH = "/home/cofucan/Videos/proj_demo.mp4"
+# VIDEO_FILE_PATH = "/home/destinedcodes/video2.mp4"
 LOCAL_URL = "http://127.0.0.1:8000/srce/api"
 REMOTE_URL = "https://www.cofucan.tech/srce/api"
 
