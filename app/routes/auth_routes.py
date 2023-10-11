@@ -46,15 +46,13 @@ os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 google_sso = GoogleSSO(
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
-    GOOGLE_REDIRECT_URL,
-    allow_insecure_http=True
+    GOOGLE_REDIRECT_URL
     ) 
 
 facebook_sso = FacebookSSO(
     FACEBOOK_CLIENT_ID,
     FACEBOOK_CLIENT_SECRET,
-    FACEBOOK_REDIRECT_URL,
-    allow_insecure_http=True
+    FACEBOOK_REDIRECT_URL
 )
 
 @auth_router.post("/signup/", response_model=UserResponse)
@@ -207,7 +205,7 @@ async def google_callback(request: Request, db: Session = Depends(get_db)) -> Us
         user = await google_sso.verify_and_process(request)
 
     if not user:
-        UserResponse(status_code=400, message="Failed to Login from Google", data=None)
+        return UserResponse(status_code=400, message="Failed to Login from Google", data=None)
 
     user_email = user.email
 
@@ -234,7 +232,7 @@ async def facebook_login(request: Request):
     """Generate Login for the User"""
 
     with facebook_sso:
-        return  await facebook_sso.get_login_redirect()
+        return await facebook_sso.get_login_redirect()
 
 @auth_router.get("/facebook/callback/")
 async def facebook_callback(request: Request,
@@ -260,7 +258,7 @@ async def facebook_callback(request: Request,
         user = await facebook_sso.verify_and_process(request)
     
     if not user:
-        UserResponse(status_code=400, message="Failed to Login from Google", data=None)
+        return UserResponse(status_code=400, message="Failed to Login from Google", data=None)
 
     user_mail = user.email
 
