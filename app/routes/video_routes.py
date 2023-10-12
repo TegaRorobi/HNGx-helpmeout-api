@@ -1,8 +1,8 @@
 """ Video routes for the FastAPI application. """
 import base64
+import datetime
 import json
 import os
-
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -12,18 +12,19 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-
 from app.database import get_db
 from app.models.user_models import User
-from app.services.services import is_logged_in
 from app.models.video_models import Video, VideoBlob
 from app.models.user_models import LogoutResponse
+from app.services.mail_service import send_video
 from app.services.services import (
+    is_logged_in,
     save_blob,
     merge_blobs,
     generate_id,
     process_video,
     hash_password,
+    is_owner,
 )
 
 router = APIRouter(prefix="/srce/api")
@@ -214,13 +215,28 @@ def get_video(video_id: str, request: Request, db: Session = Depends(get_db)):
         Video: The Video object corresponding to the provided video_id.
 
     Raises:
+        HTTPException(403): If the video with the given video_id is not public.
         HTTPException(404): If the video with the given video_id is not found.
     """
-
     video = db.query(Video).filter(Video.id == video_id).first()
     db.close()
+
     if not video:
         raise HTTPException(status_code=404, detail="Video not found")
+
+    # Check if the video is public and if the current user is the owner
+    if not video.is_public and not is_owner(request, video.username):
+        raise HTTPException(status_code=403, detail="Access denied: Private video or expired public access.")
+
+    # Check if public access period to video has expired,
+    # make video private if it has
+    if video.is_public and video.public_access_expiry_date:
+        current_datetime = datetime.datetime.utcnow()
+        if current_datetime >= video.public_access_expiry_date:
+            video.is_public = False
+            db.add(video)
+            db.commit()
+            db.close()
 
     # Replace the absolute paths with downloadable URLs
     video.original_location = str(
@@ -352,6 +368,44 @@ def update_title(video_id: str, title: str, db: Session = Depends(get_db)):
     return {"msg": "Title updated successfully!"}
 
 
+@router.patch("/videos/transfer/")
+def transfer_videos(
+    username1: str, username2: str, db: Session = Depends(get_db)
+):
+    """
+    Transfers all videos from one user to another.
+
+    Parameters:
+        username1 (str): The username of the user to transfer videos from.
+        username2 (str): The username of the user to transfer videos to.
+        db (Session, optional): The database session. Defaults to the
+            result of the get_db function.
+
+    Returns:
+        dict: A dictionary with a single key "msg" and the value "Videos
+            transferred successfully!"
+
+    Raises:
+        HTTPException: If the user with the specified username is not
+            found in the database.
+    """
+    user1 = db.query(User).filter(User.username == username1).first()
+    user2 = db.query(User).filter(User.username == username2).first()
+
+    if not user1:
+        raise HTTPException(status_code=404, detail="User not found.")
+    if not user2:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    videos = db.query(Video).filter(Video.username == username1).all()
+    for video in videos:
+        video.username = username2
+
+    db.commit()
+    db.close()
+    return {"msg": "Videos transferred successfully!"}
+
+
 @router.delete("/video/{video_id}")
 def delete_video(video_id: str, db: Session = Depends(get_db)):
     """
@@ -388,3 +442,41 @@ def delete_video(video_id: str, db: Session = Depends(get_db)):
 
     db.close()
     raise HTTPException(status_code=404, detail="Video not found.")
+
+# An endpoint to send a vudeo to user's email using fastapi-mail
+@router.post("/send-email/{video_id}")
+def send_email(
+    video_id: str,
+    receipient: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Sends an email to the user with the video embedded in the email.
+    
+    Parameters:
+        video_id (str): The id of the video to be sent to the user.
+        email (str): The email address of the user.
+    
+    Returns:
+        message (str): A message indicating whether the email was sent
+            successfully.
+    """
+    if not video_id or not receipient:
+        return None
+
+    video = db.query(Video).filter(Video.id == video_id).first()
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found.")
+
+    if video.status == "processing":
+        raise HTTPException(status_code=404, detail="Video not processed yet.")
+
+    db.close()
+
+    try:
+        send_video(video_id, receipient)
+    except Exception as e:
+        print(e)
+        return {"message": "Email not sent!"}, 500
+
+    return {"message": "Email sent successfully!"}
