@@ -4,7 +4,7 @@ from configparser import ConfigParser
 config = ConfigParser()
 config.read("config.ini")
 
-DEEPGRAM_API_KEY= config["deepgram"]["api_key"]
+DEEPGRAM_API_KEY= ""#config["deepgram"]["api_key"]
 
 
 DB_USER = "fastapi_user"
