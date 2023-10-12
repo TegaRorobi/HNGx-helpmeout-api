@@ -438,7 +438,7 @@ def get_current_user(request: Request):
         request: The request object.
 
     Returns:
-        bool: The user session
+        dict: The user session
     """
     return request.session
 
