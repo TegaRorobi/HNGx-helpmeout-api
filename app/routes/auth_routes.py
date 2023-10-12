@@ -188,7 +188,7 @@ async def change_password(
     Returns:
         UserResponse: The response object.
     """
-    requested_user = db.query(User).filter_by(username=user.username).first()
+    requested_user = db.query(User).filter_by(username=user.username.lower()).first()
 
     if not requested_user:
         return UserResponse(status_code=404, message="User not found", data=None)
@@ -201,7 +201,7 @@ async def change_password(
     db.close()
 
     return UserResponse(
-        status_code=200, message="Password changed successfully", data=None
+        status_code=200, message="Password changed successfully", username=user.username.lower()
     )
 
 @auth_router.get("/google/login/")
