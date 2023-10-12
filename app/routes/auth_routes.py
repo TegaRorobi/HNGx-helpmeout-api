@@ -9,6 +9,10 @@ from app.services.services import is_logged_in, hash_password
 from fastapi_sso.sso.google import GoogleSSO
 from fastapi_sso.sso.facebook import FacebookSSO
 from fastapi.responses import RedirectResponse
+from app.settings import (
+    GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URL, 
+    FACEBOOK_CLIENT_SECRET, FACEBOOK_CLIENT_ID, FACEBOOK_REDIRECT_URL
+)
 
 from app.models.user_models import (
     User,
@@ -27,32 +31,13 @@ from fastapi import(
 )
 
 BASE_URL = "/srce/api"
+
 auth_router = APIRouter(prefix=BASE_URL)
 
-# Load environment variables from .env file
-load_dotenv()
-
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-GOOGLE_REDIRECT_URL = "https://cofucan.tech/srce/api/google/callback/"
-
-FACEBOOK_CLIENT_ID = os.getenv("FACEBOOK_CLIENT_ID")
-FACEBOOK_CLIENT_SECRET = os.getenv("FACEBOOK_CLIENT_SECRET")
-FACEBOOK_REDIRECT_URL = "https://cofucan.tech/srce/api/facebook/callback/"
-
-LOCAL_GOOGLE_CLIENT_ID = os.getenv("LOCAL_GOOGLE_CLIENT_ID")
-LOCAL_GOOGLE_CLIENT_SECRET = os.getenv("LOCAL_GOOGLE_CLIENT_SECRET")
-LOCAL_GOOGLE_REDIRECT_URL = "http://127.0.0.1:8000/srce/api/google/callback/"
-
-
-#Ensuring oauthlib allows http protocol for testing
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
-
 google_sso = GoogleSSO(
-    LOCAL_GOOGLE_CLIENT_ID,
-    LOCAL_GOOGLE_CLIENT_SECRET,
-    LOCAL_GOOGLE_REDIRECT_URL,
-    allow_insecure_http=True
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_REDIRECT_URL
     ) 
 
 facebook_sso = FacebookSSO(
