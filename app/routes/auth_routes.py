@@ -37,8 +37,9 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 FACEBOOK_CLIENT_ID = os.getenv("FACEBOOK_CLIENT_ID")
 FACEBOOK_CLIENT_SECRET = os.getenv("FACEBOOK_CLIENT_SECRET")
 
-GOOGLE_REDIRECT_URL = "https://cofucan.tech/srce/api/google/login/"
-FACEBOOK_REDIRECT_URL = "https://cofucan.tech/srce/api/facebook/login/"
+GOOGLE_REDIRECT_URL = "https://cofucan.tech/srce/api/google/callback/"
+FACEBOOK_REDIRECT_URL = "https://cofucan.tech/srce/api/facebook/callback/"
+
 
 #Ensuring oauthlib allows http protocol for testing
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
@@ -46,15 +47,13 @@ os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 google_sso = GoogleSSO(
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
-    GOOGLE_REDIRECT_URL,
-    allow_insecure_http=True
+    GOOGLE_REDIRECT_URL
     ) 
 
 facebook_sso = FacebookSSO(
     FACEBOOK_CLIENT_ID,
     FACEBOOK_CLIENT_SECRET,
-    FACEBOOK_REDIRECT_URL,
-    allow_insecure_http=True
+    FACEBOOK_REDIRECT_URL
 )
 
 @auth_router.post("/signup/", response_model=UserResponse)
@@ -62,7 +61,7 @@ async def signup_user(
     user: UserAuthentication, db: Session = Depends(get_db)
 ) -> UserResponse:
     """
-    Registers a new user.
+    Registers a new user. Registration is not case sensitive. i.e Asanwa and asanwa are the same username
 
     Args:
         user (UserAuthentication): The user authentication data.
@@ -78,7 +77,7 @@ async def signup_user(
         # converting password to array of bytes
         hashed_password = hash_password(user.password)
 
-        new_user = User(username=user.username, hashed_password=hashed_password)
+        new_user = User(username=user.username.lower(), hashed_password=hashed_password)
 
         db.add(new_user)
         db.commit()
@@ -86,7 +85,7 @@ async def signup_user(
         db.close()
 
         return UserResponse(
-            message="User registered successfully", status_code=201, data=None
+            message="User registered successfully", status_code=201, username=user.username.lower()
         )
 
     except IntegrityError as err:
@@ -100,7 +99,7 @@ async def login_user(
     user: UserAuthentication, request: Request, db: Session = Depends(get_db)
 ) -> UserResponse:
     """
-    Logs in a user.
+    Logs in a user. Login is not case sensitive i.e Asanwa and asanwa are the same username
 
     Args:
         user (UserAuthentication): The user authentication data.
@@ -111,17 +110,19 @@ async def login_user(
         UserResponse: The response object.
     """
     # checking if the user is currently logged in
-    user_is_loggedin = is_logged_in(request)
+    if is_logged_in(request):
 
-    if user_is_loggedin:
-        return UserResponse(
-            status_code=401, message="User Already Logged in", data=None
+        raise HTTPException(
+            status_code=401, detail="A user is currently logged in. Logout the current user and try login again."
         )
 
-    needed_user = db.query(User).filter_by(username=user.username).first()
+    needed_user = db.query(User).filter_by(username=user.username.lower()).first()
+    db.close()
 
     if not needed_user:
-        return UserResponse(status_code=403, message="Invalid User", data=None)
+        raise HTTPException(
+            status_code=401, detail="Invalid Username"
+        )
 
     # converting password to array of bytes
     provided_password = user.password
@@ -134,17 +135,15 @@ async def login_user(
     result = bcrypt.checkpw(hashed_password, actual_user_password)
 
     if not result:
-        return UserResponse(
-            status_code=403, message="Invalid Password.", data=None
+        raise HTTPException(
+            status_code=401, detail="Invalid Password."
         )
 
     # Create Session for User
     request.session["username"] = needed_user.username
     request.session["logged_in"] = True
 
-    db.close()
-
-    return UserResponse(status_code=200, message="Login Successful", data=None)
+    return UserResponse(status_code=200, message="Login Successful", username=user.username.lower())
 
 
 @auth_router.post("/logout/")
@@ -162,11 +161,11 @@ async def logout_user(
         LogoutResponse: The response object.
     """
     # checking if the user is currently logged in
-    user_is_loggedin = is_logged_in(request)
-
-    if not user_is_loggedin:
+    if not is_logged_in(request):
         # User is not logged in, return an error
-        return LogoutResponse(status_code=401, message="User not logged in")
+        raise HTTPException(
+            status_code=401, detail="User not logged in"
+        )
 
     del request.session["username"]
     del request.session["logged_in"]
@@ -178,6 +177,8 @@ async def logout_user(
 @auth_router.get("/google/login/")
 async def google_login():
     """ Generate Login URL and redirect """
+
+    print(LOCAL_GOOGLE_CLIENT_ID, LOCAL_GOOGLE_CLIENT_SECRET)
 
     with google_sso:
         return await google_sso.get_login_redirect()
@@ -196,20 +197,22 @@ async def google_callback(request: Request, db: Session = Depends(get_db)) -> Us
     """
 
     # checking if the user is currently logged in
-    user_is_loggedin = is_logged_in(request)
-
-    if user_is_loggedin:
-        return UserResponse(
-            status_code=401, message="A User is Already Logged in", data=None
+    if is_logged_in(request):
+        raise HTTPException(
+            status_code=401, detail="A user is currently logged in. Logout the current user and try login again."
         )
     
     with google_sso:
         user = await google_sso.verify_and_process(request)
 
     if not user:
-        UserResponse(status_code=400, message="Failed to Login from Google", data=None)
+        raise HTTPException(
+            status_code=400, detail="Failed to Login to Google"
+        )
+    
 
     user_email = user.email
+    user_display_name = user.display_name.lower()
 
     #Check if the user is in the database
     user_in_db = db.query(User).filter_by(username= user_email).first()
@@ -224,17 +227,17 @@ async def google_callback(request: Request, db: Session = Depends(get_db)) -> Us
         db.close()
 
     # Create Session for User
-    request.session["username"] = user_email
+    request.session["username"] = user_display_name
     request.session["logged_in"] = True
 
-    return UserResponse (status_code=200, message="User Logged in Successfuly", data=None)
+    return UserResponse (status_code=200, message="User Logged in Successfuly", username=user_display_name)
 
 @auth_router.get("/facebook/login")
 async def facebook_login(request: Request):
     """Generate Login for the User"""
 
     with facebook_sso:
-        return  await facebook_sso.get_login_redirect()
+        return await facebook_sso.get_login_redirect()
 
 @auth_router.get("/facebook/callback/")
 async def facebook_callback(request: Request,
@@ -249,20 +252,22 @@ async def facebook_callback(request: Request,
 
     """
 
-    user_logged_in = is_logged_in(request)
 
-    if user_logged_in:
-             return UserResponse(
-            status_code=401, message="User Already Logged in", data=None
+    if is_logged_in(request):
+        raise HTTPException(
+            status_code=401, detail="A user is currently logged in. Logout the current user and try login again."
         )
 
     with facebook_sso:
         user = await facebook_sso.verify_and_process(request)
     
     if not user:
-        UserResponse(status_code=400, message="Failed to Login from Google", data=None)
+        raise HTTPException(
+            status_code=400, detail="Failed to Login to Facebook"
+        )
 
     user_mail = user.email
+    user_display_name = user.display_name.lower()
 
     #Check if user exists in database already
     user_in_db = db.query(User).filter_by(username=user_mail).first()
@@ -276,7 +281,7 @@ async def facebook_callback(request: Request,
         db.close()
     
     #Create Session for user
-    request.session["username"] = user_mail
+    request.session["username"] = user_display_name
     request.session["logged_in"] = True
 
-    return UserResponse (status_code=200, message="User Logged in Successfuly", data=None)
+    return UserResponse (status_code=200, message="User Logged in Successfuly", username=user_display_name)
