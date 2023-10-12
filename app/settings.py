@@ -1,12 +1,9 @@
 """ This file contains all the settings for the application. """
-from configparser import ConfigParser
-from fastapi_mail import ConnectionConfig
+import os
+from dotenv import load_dotenv
 
-config = ConfigParser()
-config.read("config.ini")
 
-DEEPGRAM_API_KEY = config["deepgram"]["api_key"]
-
+load_dotenv()
 
 DB_USER = "fastapi_user"
 DB_PASSWORD = "your_password"
@@ -18,14 +15,8 @@ MEDIA_DIR = "./media"
 VIDEO_DIR = f"{MEDIA_DIR}/uploads/"
 COMPRESSED_DIR = f"{MEDIA_DIR}/compressed/"
 THUMBNAIL_DIR = f"{MEDIA_DIR}/thumbnails/"
-
-conf = ConnectionConfig(
-    MAIL_USERNAME = "helpmeout.hngx@gmail.com",
-    MAIL_PASSWORD = "Helpmeout.HNGX",
-    MAIL_FROM = "helpmeout.hngx@gmail.com",
-    MAIL_PORT = 587,
-    MAIL_SERVER = "smtp.gmail.com",
-    MAIL_STARTTLS = True,
-    MAIL_SSL_TLS = False,
-    USE_CREDENTIALS = True
-)
+DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API")
+EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
+EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
+EMAIL_HOST = os.environ.get("EMAIL_HOST")
+EMAIL_PORT = os.environ.get("EMAIL_PORT")

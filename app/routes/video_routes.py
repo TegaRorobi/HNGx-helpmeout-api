@@ -2,7 +2,6 @@
 import base64
 import json
 import os
-
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -11,16 +10,14 @@ from fastapi import (
     Request,
 )
 from fastapi.responses import FileResponse
-from fastapi_mail import FastMail, MessageSchema
 from sqlalchemy.orm import Session
-
-from app.settings import conf
 from app.database import get_db
 from app.models.user_models import User
-from app.services.services import is_logged_in
 from app.models.video_models import Video, VideoBlob
 from app.models.user_models import LogoutResponse
+from app.services.mail_service import send_video
 from app.services.services import (
+    is_logged_in,
     save_blob,
     merge_blobs,
     generate_id,
@@ -390,45 +387,38 @@ def delete_video(video_id: str, db: Session = Depends(get_db)):
 
 # An endpoint to send a vudeo to user's email using fastapi-mail
 @router.post("/send-email/")
-async def send_email(
-    email: str,
+def send_email(
     video_id: str,
+    receipient: str,
     db: Session = Depends(get_db),
 ):
     """
-    Send a video to user's email.
-
-    Args:
-        email (str): The email of the user.
-        video_id (str): The id of the video.
-        db (Session, optional): The database session. Default
-            Depends(get_db).
-
+    Sends an email to the user with the video embedded in the email.
+    
+    Parameters:
+        video_id (str): The id of the video to be sent to the user.
+        email (str): The email address of the user.
+    
     Returns:
-        dict: A dictionary containing the success message and video ID.
-
-    Raises:
-        None
+        message (str): A message indicating whether the email was sent
+            successfully.
     """
+    if not video_id or not receipient:
+        return None
+
     video = db.query(Video).filter(Video.id == video_id).first()
     if not video:
         raise HTTPException(status_code=404, detail="Video not found.")
+
     if video.status == "processing":
         raise HTTPException(status_code=404, detail="Video not processed yet.")
 
-    message = MessageSchema(
-        subject= f"Recording {video.title}",
-        recipients=[email],
-        body=f"Hi, \n\nHere is your recording {video.title}.\n\nBest regards,\nSRCE Team",
-        attachments=[str(video.original_location)],
-        subtype="html",
-    )
+    db.close()
 
-    email = FastMail(conf)
-    await email.send_message(message)
+    try:
+        send_video(video_id, receipient)
+    except Exception as e:
+        print(e)
+        return {"message": "Email not sent!"}, 500
 
-    return {
-        "message": "Email sent successfully",
-        "video_id": video.id,
-    }
-
+    return {"message": "Email sent successfully!"}
