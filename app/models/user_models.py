@@ -48,7 +48,7 @@ class UserResponse(BaseModel):
     """ The user response model """
     message: str
     status_code: int
-    data: Optional[dict] = None
+    username: Optional[str] = None
 
 
 class LogoutResponse(BaseModel):
