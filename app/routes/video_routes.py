@@ -3,7 +3,6 @@ import base64
 import datetime
 import json
 import os
-
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -13,13 +12,13 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-
 from app.database import get_db
 from app.models.user_models import User
-from app.services.services import is_logged_in
 from app.models.video_models import Video, VideoBlob
 from app.models.user_models import LogoutResponse
+from app.services.mail_service import send_video
 from app.services.services import (
+    is_logged_in,
     save_blob,
     merge_blobs,
     generate_id,
@@ -443,3 +442,41 @@ def delete_video(video_id: str, db: Session = Depends(get_db)):
 
     db.close()
     raise HTTPException(status_code=404, detail="Video not found.")
+
+# An endpoint to send a vudeo to user's email using fastapi-mail
+@router.post("/send-email/{video_id}")
+def send_email(
+    video_id: str,
+    receipient: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Sends an email to the user with the video embedded in the email.
+    
+    Parameters:
+        video_id (str): The id of the video to be sent to the user.
+        email (str): The email address of the user.
+    
+    Returns:
+        message (str): A message indicating whether the email was sent
+            successfully.
+    """
+    if not video_id or not receipient:
+        return None
+
+    video = db.query(Video).filter(Video.id == video_id).first()
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found.")
+
+    if video.status == "processing":
+        raise HTTPException(status_code=404, detail="Video not processed yet.")
+
+    db.close()
+
+    try:
+        send_video(video_id, receipient)
+    except Exception as e:
+        print(e)
+        return {"message": "Email not sent!"}, 500
+
+    return {"message": "Email sent successfully!"}
