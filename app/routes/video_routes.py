@@ -18,7 +18,6 @@ from app.models.video_models import Video, VideoBlob
 from app.models.user_models import LogoutResponse
 from app.services.mail_service import send_video
 from app.services.services import (
-    is_logged_in,
     save_blob,
     merge_blobs,
     generate_id,
@@ -179,10 +178,12 @@ def get_videos(username: str, request: Request, db: Session = Depends(get_db)):
         List[Video]: A list of Video objects associated with the given
             username, with downloadable URLs instead of absolute paths.
     """
-    if not is_logged_in(request):
-        return LogoutResponse(status_code=401, message="User not logged in")
 
     videos = db.query(Video).filter(Video.username == username).all()
+
+    if not videos:
+        raise HTTPException(status_code=404, detail="User Videos not found.")
+    
     db.close()
 
     # Replace the absolute paths with downloadable URLs

@@ -5,13 +5,14 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 import os
 from app.database import get_db
-from app.services.services import is_logged_in, hash_password
+from app.services.services import hash_password
 from fastapi_sso.sso.google import GoogleSSO
 from fastapi_sso.sso.facebook import FacebookSSO
 from fastapi.responses import RedirectResponse
 from app.settings import (
-    GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URL, 
-    FACEBOOK_CLIENT_SECRET, FACEBOOK_CLIENT_ID, FACEBOOK_REDIRECT_URL
+    GOOGLE_CLIENT_ID, 
+    GOOGLE_CLIENT_SECRET, 
+    GOOGLE_REDIRECT_URL,
 )
 
 from app.models.user_models import (
@@ -39,12 +40,6 @@ google_sso = GoogleSSO(
     GOOGLE_CLIENT_SECRET,
     GOOGLE_REDIRECT_URL
     ) 
-
-facebook_sso = FacebookSSO(
-    FACEBOOK_CLIENT_ID,
-    FACEBOOK_CLIENT_SECRET,
-    FACEBOOK_REDIRECT_URL
-)
 
 @auth_router.post("/signup/", response_model=UserResponse)
 async def signup_user(
@@ -124,18 +119,19 @@ async def login_user(
             status_code=401, detail="Invalid Password."
         )
 
-    return UserResponse(status_code=200, message="Login Successful", username=user.username.lower())
+    return UserResponse(
+        status_code=200, message="Login Successful", username=user.username.lower()
+        )
 
 
 @auth_router.post("/logout/")
 async def logout_user(
-    request: Request, _: Session = Depends(get_db)
+    _: Session = Depends(get_db)
 ) -> LogoutResponse:
     """
     Logs out a user.
 
     Args:
-        request (Request): The request object.
         _ (Session, optional): The db session. Defaults to Depends(get_db).
 
     Returns:
