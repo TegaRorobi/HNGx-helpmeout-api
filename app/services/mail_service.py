@@ -1,5 +1,5 @@
 """ This module contains the functions for sending emails to users. """
-import smtplib
+import smtplib, ssl
 from email.message import EmailMessage
 from app.settings import (
     EMAIL_ADDRESS,
@@ -21,12 +21,13 @@ def send_video(video_id: str, recepient_address: str):
             successfully.
     """
     msg = EmailMessage()
-    msg["Subject"] = "Beautiful Subject"
+    msg["Subject"] = "HelpMeOut Screen Recorder"
     msg["From"] = EMAIL_ADDRESS
     msg["To"] = recepient_address
     msg.set_content(get_mail(video_id), subtype="html",)
 
-    with smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT) as smtp:
+    with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as smtp:
+        smtp.starttls(context=ssl.create_default_context())
         smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
         smtp.send_message(msg)
 
@@ -137,3 +138,6 @@ def get_mail(video_id):
         </body>
     </html>
     """
+
+if __name__ == "__main__":
+    send_video("PhflW3mviCrSXoa", "yiradesat@gnail.com")

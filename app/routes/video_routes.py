@@ -386,7 +386,7 @@ def delete_video(video_id: str, db: Session = Depends(get_db)):
     raise HTTPException(status_code=404, detail="Video not found.")
 
 # An endpoint to send a vudeo to user's email using fastapi-mail
-@router.post("/send-email/")
+@router.post("/send-email/{video_id}")
 def send_email(
     video_id: str,
     receipient: str,
