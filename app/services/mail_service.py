@@ -32,7 +32,7 @@ def send_video(video_id: str, recepient_address: str):
         smtp.send_message(msg)
 
 
-def get_mail(video_id):
+def get_mail(video_id: str):
     """
     Returns the HTML for the email to be sent to the user.
 
