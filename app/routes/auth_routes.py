@@ -178,8 +178,6 @@ async def logout_user(
 async def google_login():
     """ Generate Login URL and redirect """
 
-    print(LOCAL_GOOGLE_CLIENT_ID, LOCAL_GOOGLE_CLIENT_SECRET)
-
     with google_sso:
         return await google_sso.get_login_redirect()
 
