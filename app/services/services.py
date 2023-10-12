@@ -430,3 +430,30 @@ def hash_password(password: str):
 
     # Hashing the password
     return  bcrypt.hashpw(pw_bytes, salt)
+
+
+def get_current_user(request: Request):
+    """
+    Parameters:
+        request: The request object.
+
+    Returns:
+        dict: The user session
+    """
+    return request.session
+
+
+def is_owner(request: Request, video_owner: str) -> bool:
+    """
+    Checks if the current user is the owner of a video.
+
+    Parameters:
+        request: The request object.
+        video_owner (str): The username of the video owner.
+
+    Returns:
+        bool: True if the current user is the owner; otherwise, False.
+    """
+    user = get_current_user(request)
+
+    return user.get("username") == video_owner

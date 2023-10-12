@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
-from sqlalchemy import Column, Enum, String, DateTime, ForeignKey
+from sqlalchemy import Column, Enum, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -34,6 +34,8 @@ class Video(Base):
         ),
         default="processing",
     )
+    is_public: bool = Column(Boolean, default=True)
+    public_access_expiry_date: Optional[datetime] = Column(DateTime, nullable=True)
 
     user = relationship("User", backref="videos")
 

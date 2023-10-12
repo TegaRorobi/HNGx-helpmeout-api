@@ -1,5 +1,6 @@
 """ Video routes for the FastAPI application. """
 import base64
+import datetime
 import json
 import os
 from fastapi import (
@@ -23,6 +24,7 @@ from app.services.services import (
     generate_id,
     process_video,
     hash_password,
+    is_owner,
 )
 
 router = APIRouter(prefix="/srce/api")
@@ -213,13 +215,28 @@ def get_video(video_id: str, request: Request, db: Session = Depends(get_db)):
         Video: The Video object corresponding to the provided video_id.
 
     Raises:
+        HTTPException(403): If the video with the given video_id is not public.
         HTTPException(404): If the video with the given video_id is not found.
     """
-
     video = db.query(Video).filter(Video.id == video_id).first()
     db.close()
+
     if not video:
         raise HTTPException(status_code=404, detail="Video not found")
+
+    # Check if the video is public and if the current user is the owner
+    if not video.is_public and not is_owner(request, video.username):
+        raise HTTPException(status_code=403, detail="Access denied: Private video or expired public access.")
+
+    # Check if public access period to video has expired,
+    # make video private if it has
+    if video.is_public and video.public_access_expiry_date:
+        current_datetime = datetime.datetime.utcnow()
+        if current_datetime >= video.public_access_expiry_date:
+            video.is_public = False
+            db.add(video)
+            db.commit()
+            db.close()
 
     # Replace the absolute paths with downloadable URLs
     video.original_location = str(
