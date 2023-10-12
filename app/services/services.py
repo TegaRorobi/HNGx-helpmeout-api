@@ -457,5 +457,5 @@ def is_owner(request: Request, video_owner: str) -> bool:
     user = get_current_user(request)
 
     if user:
-        return user.username == video_owner
+        return user['username'] == video_owner
     return False
