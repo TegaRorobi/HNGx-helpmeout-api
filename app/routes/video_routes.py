@@ -27,6 +27,9 @@ from app.services.services import (
 
 router = APIRouter(prefix="/srce/api")
 
+@router.get("/")
+async def home():
+    return {"Message": "NOTHING LIKE 127.0.0.1"}
 
 @router.post("/start-recording/")
 def start_recording(
@@ -346,6 +349,44 @@ def update_title(video_id: str, title: str, db: Session = Depends(get_db)):
     db.commit()
     db.close()
     return {"msg": "Title updated successfully!"}
+
+
+@router.patch("/videos/transfer/")
+def transfer_videos(
+    username1: str, username2: str, db: Session = Depends(get_db)
+):
+    """
+    Transfers all videos from one user to another.
+
+    Parameters:
+        username1 (str): The username of the user to transfer videos from.
+        username2 (str): The username of the user to transfer videos to.
+        db (Session, optional): The database session. Defaults to the
+            result of the get_db function.
+
+    Returns:
+        dict: A dictionary with a single key "msg" and the value "Videos
+            transferred successfully!"
+
+    Raises:
+        HTTPException: If the user with the specified username is not
+            found in the database.
+    """
+    user1 = db.query(User).filter(User.username == username1).first()
+    user2 = db.query(User).filter(User.username == username2).first()
+
+    if not user1:
+        raise HTTPException(status_code=404, detail="User not found.")
+    if not user2:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    videos = db.query(Video).filter(Video.username == username1).all()
+    for video in videos:
+        video.username = username2
+
+    db.commit()
+    db.close()
+    return {"msg": "Videos transferred successfully!"}
 
 
 @router.delete("/video/{video_id}")
