@@ -1,83 +1,92 @@
 <mjml>
   <mj-head>
     <mj-title>Welcome Email</mj-title>
-    <mj-font
-      name="FontAwesome"
-      href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
-    />
-    <mj-font
-      name="Manrope"
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap"
-    />
+    <mj-font name="FontAwesome" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <mj-font name="Work Sans"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,200;9..40,400;9..40,500;9..40,700&family=Sora:wght@300;400;500;700&family=Work+Sans:ital,wght@0,300;0,400;1,500&display=swap "/>
+    
+ 
     <mj-attributes>
       <mj-class name="primary" color="#33a467" />
       <mj-class name="neutral" color="#253237" />
       <mj-class name="white" color="#fff" />
       <mj-class name="secondary" background-color="#ecebe6" />
 
-      <mj-text font-family="Century Gothic" font-size="16px" />
+      <mj-text font-family="Work Sans" font-size="16px" />
     </mj-attributes>
   </mj-head>
-  <mj-body background-color="#ecebe6">
+  <mj-body background-color="#EDECF0">
     <mj-section padding-top="30px">
       <mj-column css-class="logo" width="100%">
-       <mj-image src="https://help-me-out-mine.vercel.app/assets/shared/logo.svg?raw=true"
-          alt=""
-          width="160px"
-          height="30px"
-          css-class="large-on-big-screens"
-        ></mj-image>
+        <mj-image src="https://github.com/hngx-org/helpmeout-api/blob/email/app/services/images/logoname.png?raw=true" alt="" width="160px"
+          height="30px" css-class="large-on-big-screens"></mj-image>
+         <mj-text align="center" font-weight="400" font-size="16px" color="#000" line-height="24px"> Hey there 👋
+     </mj-text>
       </mj-column>
     </mj-section>
+
+    <mj-section padding="20px" background-color="white">
+      <mj-column width="512px">
+        <mj-text font-size="12px" padding-top="10px" font-family="Work Sans" color="#5E5E5E" align="center">
+          <b>{{user_name}}</b> recorded and sent you this video, </br>  you can preview and download it.
+        </mj-text>
+        <mj-text font-size="12px"  font-family="Work Sans" color="#5E5E5E" align="center">
+          Cheers ✨
+        </mj-text>
+      </mj-column>
     
-    <mj-section padding-top="10px">
-    <mj-text align="center" font-size="18px" color="#000">Hi <b>Mark,</b>  </mj-text>
-    <mj-text align="center" font-size="18px" color="#000" line-height="24px" >A video was just shared with you, </br> check it out below</mj-text>
-    </mj-section>
+  <mj-column width="100%">
+      <mj-image
+        src="https://www.cofucan.tech/srce/api/thumbnail/{{video_id}}.jpeg"
+        alt="Video Thumbnail"
+        width="370px"
+        height="auto"
+        href="https://example.com/your_video_url.mp4"
+      />
+    
+      <mj-raw>
+        <a href="https://example.com/your_video_url.mp4" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, 0%); z-index: 2;">
+          <img src="https://github.com/hngx-org/helpmeout-api/blob/email/app/services/images/play.png?raw=true" alt="Play Button" style="width: 70px; height: 70px;" />
+        </a>
+      </mj-raw>
   
-      <mj-section padding="20px" background-color="white">
-      <mj-column width="100%">
-        <mj-text font-size="18px" padding-top="4px" font-family="Century Gothic" align="center">
-          Samuel recorded and sent you this video you can preview and download it.
-        </mj-text>
-        <mj-text font-size="18px" padding-top="10px" font-family="Century Gothic" align="center">
-          Cheers :sparkles:
-        </mj-text>
-      </mj-column>
-      <mj-column width="100%">
-        <mj-image src="https://example.com/video_thumbnail.jpg" alt="Video Thumbnail" width="100%" height="auto" href="https://example.com/your_video_url.mp4" />
-      </mj-column>
-      <!-- Centered Download Button -->
-      <mj-column width="100%" align="center">
-        <mj-button href="https://example.com" background-color="#120B48" color="#fff">
-          <mj-image src="https://example.com/download_icon.png" alt="Download" class="download-icon" width="20px" height="20px" />
-          Download video
-        </mj-button>
-      </mj-column>
-    </mj-section>
-  
-  <mj-section >
-  <mj-column width="100%" align="center">
-      <mj-social mode="horizontal" icon-size="20px">
-        <mj-social-element name="facebook" href="https://imgur.com/VPQzXWD" background-color="#007BFF" />
-        <mj-social-element name="twitter" href="https://twitter.com/your_twitter_page_url" background-color="#007BFF" />
-        <mj-social-element name="linkedin" href="https://www.linkedin.com/in/your_linkedin_profile_url" background-color="#007BFF" />
-        <mj-social-element name="instagram" href="https://www.instagram.com/your_instagram_profile_url" background-color="#007BFF" />
-      </mj-social>
     </mj-column>
-  </mj-section>
-  
-  <mj-section >
-  <mj-text align="center" color="#666" font-size="12px" style="margin-bottom: 20px;">
-  Copyright &copy; 2023.
-</mj-text>
-<mj-text align="center" color="#666" font-size="12px" style="margin-bottom: 20px;">
-  HelpMeOut
-</mj-text>
-<mj-text align="center" color="#007BFF" font-size="12px" style="margin-bottom: 20px;">
-  <a href="https://www.helpmeout.com" style="text-decoration: none;">www.helpmeout.com</a>
-</mj-text>
-  </mj-section>
-  
+    
+      <!--  Download Button -->
+   <mj-column width="100%">
+  <mj-button href="https://www.cofucan.tech/srce/api/download/{{video_id}}" background-color="#120B48" color="#fff">
+    <mj-image src="icon-url.png" alt="Download" width="20px" height="20px" align="middle" />
+    <mj-text>Download video</mj-text>
+  </mj-button>
+</mj-column>
+
+    </mj-section>
+
+    <mj-section>
+      <mj-column width="100%">
+        <mj-social mode="horizontal" icon-size="30px">
+          <mj-social-element href="https://imgur.com/VPQzXWD"src="https://github.com/hngx-org/helpmeout-api/blob/email/app/services/images/Facebook.png?raw=true"  />
+          
+          
+          <mj-social-element href="https://twitter.com/your_twitter_page_url" 
+     src="https://github.com/hngx-org/helpmeout-api/blob/email/app/services/images/twitter.png?raw=true" 
+            />
+          <mj-social-element href="https://www.linkedin.com/in/your_linkedin_profile_url"
+ src="https://github.com/hngx-org/helpmeout-api/blob/email/app/services/images/linkedin.png?raw=true"/>
+          <mj-social-element href="https://www.instagram.com/your_instagram_profile_url"
+ src="https://github.com/hngx-org/helpmeout-api/blob/email/app/services/images/insatgram.png?raw=true" />
+        </mj-social>
+        <mj-text align="center" color="#666" font-size="12px">
+          Copyright &copy; 2023.
+        </mj-text>
+        <mj-text align="center" color="#666" font-size="12px">
+          HelpMeOut
+        </mj-text>
+        <mj-text align="center" color="#007BFF" font-size="12px">
+          <a href="https://www.helpmeout.com" style="text-decoration: none;">www.helpmeout.com</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
   </mj-body>
 </mjml>
