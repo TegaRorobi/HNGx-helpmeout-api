@@ -28,7 +28,7 @@
     <mj-section padding="20px" background-color="white">
       <mj-column width="512px">
         <mj-text font-size="12px" padding-top="10px" font-family="Work Sans" color="#5E5E5E" align="center">
-          <b>{{user_name}}</b> recorded and sent you this video, </br>  you can preview and download it.
+          <b>{{username}}</b> recorded and sent you this video, </br>  you can preview and download it.
         </mj-text>
         <mj-text font-size="12px"  font-family="Work Sans" color="#5E5E5E" align="center">
           Cheers ✨
@@ -65,16 +65,10 @@
     <mj-section>
       <mj-column width="100%">
         <mj-social mode="horizontal" icon-size="30px">
-          <mj-social-element href="https://imgur.com/VPQzXWD"src="https://github.com/hngx-org/helpmeout-api/blob/email/app/services/images/Facebook.png?raw=true"  />
-          
-          
-          <mj-social-element href="https://twitter.com/your_twitter_page_url" 
-     src="https://github.com/hngx-org/helpmeout-api/blob/email/app/services/images/twitter.png?raw=true" 
-            />
-          <mj-social-element href="https://www.linkedin.com/in/your_linkedin_profile_url"
- src="https://github.com/hngx-org/helpmeout-api/blob/email/app/services/images/linkedin.png?raw=true"/>
-          <mj-social-element href="https://www.instagram.com/your_instagram_profile_url"
- src="https://github.com/hngx-org/helpmeout-api/blob/email/app/services/images/insatgram.png?raw=true" />
+          <mj-social-element href="https://imgur.com/VPQzXWD"/>
+          <mj-social-element href="https://twitter.com/your_twitter_page_url"/>
+          <mj-social-element href="https://www.linkedin.com/in/your_linkedin_profile_url"/>
+          <mj-social-element href="https://www.instagram.com/your_instagram_profile_url"/>
         </mj-social>
         <mj-text align="center" color="#666" font-size="12px">
           Copyright &copy; 2023.
