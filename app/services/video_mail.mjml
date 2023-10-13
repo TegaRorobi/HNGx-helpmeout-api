@@ -41,11 +41,11 @@
         alt="Video Thumbnail"
         width="370px"
         height="auto"
-        href="https://example.com/your_video_url.mp4"
+        href="https://helpmeout-dev.vercel.app/videos/{{video_id}}"
       />
-    
+
       <mj-raw>
-        <a href="https://example.com/your_video_url.mp4" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, 0%); z-index: 2;">
+        <a href="https://helpmeout-dev.vercel.app/videos/{{video_id}}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, 0%); z-index: 2;">
           <img src="https://github.com/hngx-org/helpmeout-api/blob/email/app/services/images/play.png?raw=true" alt="Play Button" style="width: 70px; height: 70px;" />
         </a>
       </mj-raw>
