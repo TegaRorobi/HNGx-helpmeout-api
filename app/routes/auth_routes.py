@@ -5,10 +5,15 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 import os
 from app.database import get_db
-from app.services.services import is_logged_in, hash_password
+from app.services.services import hash_password
 from fastapi_sso.sso.google import GoogleSSO
 from fastapi_sso.sso.facebook import FacebookSSO
 from fastapi.responses import RedirectResponse
+from app.settings import (
+    GOOGLE_CLIENT_ID, 
+    GOOGLE_CLIENT_SECRET, 
+    GOOGLE_REDIRECT_URL,
+)
 
 from app.models.user_models import (
     User,
@@ -27,34 +32,14 @@ from fastapi import(
 )
 
 BASE_URL = "/srce/api"
+
 auth_router = APIRouter(prefix=BASE_URL)
-
-# Load environment variables from .env file
-load_dotenv()
-
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-FACEBOOK_CLIENT_ID = os.getenv("FACEBOOK_CLIENT_ID")
-FACEBOOK_CLIENT_SECRET = os.getenv("FACEBOOK_CLIENT_SECRET")
-
-GOOGLE_REDIRECT_URL = "https://cofucan.tech/srce/api/google/callback/"
-FACEBOOK_REDIRECT_URL = "https://cofucan.tech/srce/api/facebook/callback/"
-
-
-#Ensuring oauthlib allows http protocol for testing
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 google_sso = GoogleSSO(
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_REDIRECT_URL
     ) 
-
-facebook_sso = FacebookSSO(
-    FACEBOOK_CLIENT_ID,
-    FACEBOOK_CLIENT_SECRET,
-    FACEBOOK_REDIRECT_URL
-)
 
 @auth_router.post("/signup/", response_model=UserResponse)
 async def signup_user(
@@ -109,14 +94,9 @@ async def login_user(
     Returns:
         UserResponse: The response object.
     """
-    # checking if the user is currently logged in
-    if is_logged_in(request):
-
-        raise HTTPException(
-            status_code=401, detail="A user is currently logged in. Logout the current user and try login again."
-        )
 
     needed_user = db.query(User).filter_by(username=user.username.lower()).first()
+
     db.close()
 
     if not needed_user:
@@ -139,36 +119,24 @@ async def login_user(
             status_code=401, detail="Invalid Password."
         )
 
-    # Create Session for User
-    request.session["username"] = needed_user.username
-    request.session["logged_in"] = True
-
-    return UserResponse(status_code=200, message="Login Successful", username=user.username.lower())
+    return UserResponse(
+        status_code=200, message="Login Successful", username=user.username.lower()
+        )
 
 
 @auth_router.post("/logout/")
 async def logout_user(
-    request: Request, _: Session = Depends(get_db)
+    _: Session = Depends(get_db)
 ) -> LogoutResponse:
     """
     Logs out a user.
 
     Args:
-        request (Request): The request object.
         _ (Session, optional): The db session. Defaults to Depends(get_db).
 
     Returns:
         LogoutResponse: The response object.
     """
-    # checking if the user is currently logged in
-    if not is_logged_in(request):
-        # User is not logged in, return an error
-        raise HTTPException(
-            status_code=401, detail="User not logged in"
-        )
-
-    del request.session["username"]
-    del request.session["logged_in"]
 
     return LogoutResponse(
         status_code=200, message="User Logged out successfully"
@@ -223,12 +191,6 @@ async def google_callback(request: Request, db: Session = Depends(get_db)) -> Us
     Return:
     -   UserResponse: A response containing success or failure message when user tries to login with their google account 
     """
-
-    # checking if the user is currently logged in
-    if is_logged_in(request):
-        raise HTTPException(
-            status_code=401, detail="A user is currently logged in. Logout the current user and try login again."
-        )
     
     with google_sso:
         user = await google_sso.verify_and_process(request)
@@ -253,63 +215,5 @@ async def google_callback(request: Request, db: Session = Depends(get_db)) -> Us
         db.commit()
         db.refresh(new_user)
         db.close()
-
-    # Create Session for User
-    request.session["username"] = user_display_name
-    request.session["logged_in"] = True
-
-    return UserResponse (status_code=200, message="User Logged in Successfuly", username=user_display_name)
-
-@auth_router.get("/facebook/login")
-async def facebook_login(request: Request):
-    """Generate Login for the User"""
-
-    with facebook_sso:
-        return await facebook_sso.get_login_redirect()
-
-@auth_router.get("/facebook/callback/")
-async def facebook_callback(request: Request,
-                            db: Session=Depends(get_db)
-                            )->UserResponse:
-    """
-        Logs in the user to the site using their facebook account
-
-        Args:
-        -   request: The request object
-        -   db:      The database object
-
-    """
-
-
-    if is_logged_in(request):
-        raise HTTPException(
-            status_code=401, detail="A user is currently logged in. Logout the current user and try login again."
-        )
-
-    with facebook_sso:
-        user = await facebook_sso.verify_and_process(request)
-    
-    if not user:
-        raise HTTPException(
-            status_code=400, detail="Failed to Login to Facebook"
-        )
-
-    user_mail = user.email
-    user_display_name = user.display_name.lower()
-
-    #Check if user exists in database already
-    user_in_db = db.query(User).filter_by(username=user_mail).first()
-
-    if not user_in_db:
-        password = hash_password(user_mail)
-        new_user = User(usernmae=user_mail, hashed_password=password)
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-        db.close()
-    
-    #Create Session for user
-    request.session["username"] = user_display_name
-    request.session["logged_in"] = True
 
     return UserResponse (status_code=200, message="User Logged in Successfuly", username=user_display_name)

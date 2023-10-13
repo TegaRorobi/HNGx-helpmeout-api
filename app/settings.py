@@ -22,6 +22,4 @@ EMAIL_HOST = os.environ.get("EMAIL_HOST")
 EMAIL_PORT = os.environ.get("EMAIL_PORT")
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
-FACEBOOK_CLIENT_ID = os.environ.get("FACEBOOK_CLIENT_ID")
-FACEBOOK_CLIENT_SECRET = os.environ.get("FACEBOOK_CLIENT_SECRET")
-SESSION_COOKIE_NAME = "server"
+GOOGLE_REDIRECT_URL = "https://cofucan.tech/srce/api/google/callback/"
