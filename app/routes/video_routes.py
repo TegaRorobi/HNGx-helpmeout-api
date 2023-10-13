@@ -503,10 +503,10 @@ def send_email(
     if video.status == "processing":
         raise HTTPException(status_code=404, detail="Video not processed yet.")
 
-    db.close()
 
     try:
-        send_video(video_id, receipient)
+        send_video(video.username, video_id, receipient)
+        db.close()
     except Exception as e:
         print(e)
         return {"message": "Email not sent!"}, 500
