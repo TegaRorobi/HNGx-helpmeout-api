@@ -64,12 +64,12 @@
 
     <mj-section>
       <mj-column width="100%">
-        <mj-social mode="horizontal" icon-size="30px">
-          <mj-social-element href="https://imgur.com/VPQzXWD"/>
-          <mj-social-element href="https://twitter.com/your_twitter_page_url"/>
-          <mj-social-element href="https://www.linkedin.com/in/your_linkedin_profile_url"/>
-          <mj-social-element href="https://www.instagram.com/your_instagram_profile_url"/>
-        </mj-social>
+      <mj-social mode="horizontal" icon-size="20px">
+        <mj-social-element name="facebook" href="https://imgur.com/VPQzXWD" background-color="#007BFF" />
+        <mj-social-element name="twitter" href="https://twitter.com/your_twitter_page_url" background-color="#007BFF" />
+        <mj-social-element name="linkedin" href="https://www.linkedin.com/in/your_linkedin_profile_url" background-color="#007BFF" />
+        <mj-social-element name="instagram" href="https://www.instagram.com/your_instagram_profile_url" background-color="#007BFF" />
+      </mj-social>
         <mj-text align="center" color="#666" font-size="12px">
           Copyright &copy; 2023.
         </mj-text>
