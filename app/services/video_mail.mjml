@@ -1,0 +1,83 @@
+<mjml>
+  <mj-head>
+    <mj-title>Welcome Email</mj-title>
+    <mj-font
+      name="FontAwesome"
+      href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <mj-font
+      name="Manrope"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap"
+    />
+    <mj-attributes>
+      <mj-class name="primary" color="#33a467" />
+      <mj-class name="neutral" color="#253237" />
+      <mj-class name="white" color="#fff" />
+      <mj-class name="secondary" background-color="#ecebe6" />
+
+      <mj-text font-family="Century Gothic" font-size="16px" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#ecebe6">
+    <mj-section padding-top="30px">
+      <mj-column css-class="logo" width="100%">
+       <mj-image src="https://help-me-out-mine.vercel.app/assets/shared/logo.svg?raw=true"
+          alt=""
+          width="160px"
+          height="30px"
+          css-class="large-on-big-screens"
+        ></mj-image>
+      </mj-column>
+    </mj-section>
+    
+    <mj-section padding-top="10px">
+    <mj-text align="center" font-size="18px" color="#000">Hi <b>Mark,</b>  </mj-text>
+    <mj-text align="center" font-size="18px" color="#000" line-height="24px" >A video was just shared with you, </br> check it out below</mj-text>
+    </mj-section>
+  
+      <mj-section padding="20px" background-color="white">
+      <mj-column width="100%">
+        <mj-text font-size="18px" padding-top="4px" font-family="Century Gothic" align="center">
+          Samuel recorded and sent you this video you can preview and download it.
+        </mj-text>
+        <mj-text font-size="18px" padding-top="10px" font-family="Century Gothic" align="center">
+          Cheers :sparkles:
+        </mj-text>
+      </mj-column>
+      <mj-column width="100%">
+        <mj-image src="https://example.com/video_thumbnail.jpg" alt="Video Thumbnail" width="100%" height="auto" href="https://example.com/your_video_url.mp4" />
+      </mj-column>
+      <!-- Centered Download Button -->
+      <mj-column width="100%" align="center">
+        <mj-button href="https://example.com" background-color="#120B48" color="#fff">
+          <mj-image src="https://example.com/download_icon.png" alt="Download" class="download-icon" width="20px" height="20px" />
+          Download video
+        </mj-button>
+      </mj-column>
+    </mj-section>
+  
+  <mj-section >
+  <mj-column width="100%" align="center">
+      <mj-social mode="horizontal" icon-size="20px">
+        <mj-social-element name="facebook" href="https://imgur.com/VPQzXWD" background-color="#007BFF" />
+        <mj-social-element name="twitter" href="https://twitter.com/your_twitter_page_url" background-color="#007BFF" />
+        <mj-social-element name="linkedin" href="https://www.linkedin.com/in/your_linkedin_profile_url" background-color="#007BFF" />
+        <mj-social-element name="instagram" href="https://www.instagram.com/your_instagram_profile_url" background-color="#007BFF" />
+      </mj-social>
+    </mj-column>
+  </mj-section>
+  
+  <mj-section >
+  <mj-text align="center" color="#666" font-size="12px" style="margin-bottom: 20px;">
+  Copyright &copy; 2023.
+</mj-text>
+<mj-text align="center" color="#666" font-size="12px" style="margin-bottom: 20px;">
+  HelpMeOut
+</mj-text>
+<mj-text align="center" color="#007BFF" font-size="12px" style="margin-bottom: 20px;">
+  <a href="https://www.helpmeout.com" style="text-decoration: none;">www.helpmeout.com</a>
+</mj-text>
+  </mj-section>
+  
+  </mj-body>
+</mjml>
