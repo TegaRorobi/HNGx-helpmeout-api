@@ -284,10 +284,10 @@ def stream_video(video_id: str, db: Session = Depends(get_db)):
 
     return FileResponse(video.original_location, media_type="video/mp4")
 
-@router.get("/download/{video_id}.mp4")
+@router.get("/download/{video_id}")
 def download_video(video_id: str, db: Session = Depends(get_db)):
     """
-    Triggers diwnalod of a video by its video ID.
+    Triggers download of a video by its video ID.
 
     Parameters:
         video_id (str): The ID of the video to be streamed.
@@ -295,7 +295,7 @@ def download_video(video_id: str, db: Session = Depends(get_db)):
             result of the get_db function.
 
     Returns:
-        FileResponse: The file response containing the video stream.
+        FileResponse: The file response containing the video file.
 
     Raises:
         HTTPException: If the video is not found.
@@ -314,7 +314,7 @@ def download_video(video_id: str, db: Session = Depends(get_db)):
         db.commit()
         db.close()
 
-    return FileResponse(video.original_location, media_type="video/mp4", filename=video.title+".mp4")
+    return FileResponse(video.original_location, media_type="video/mp4", filename=f"{video.title}.mp4")
 
 @router.get("/transcript/{video_id}.json")
 def get_transcript(video_id: str, db: Session = Depends(get_db)):
