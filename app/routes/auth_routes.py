@@ -142,6 +142,33 @@ async def logout_user(
         status_code=200, message="User Logged out successfully"
     )
 
+# an endooint to generate rwndom 6 digit code sends a forgot passsword email contsiningn the otp
+@auth_router.post("/send_otp/")
+async def send_otp(
+        username: str,
+        db: Session = Depends(get_db)
+    ) -> UserResponse:
+    """
+    Sends a 6 digit code to the user's email address.
+
+    Args:
+        username (str): The user's username.
+        db (Session, optional): The db session. Defaults to Depends(get_db).
+    Returns:
+        UserResponse: The response object.
+    """
+    #check if user exists
+    user = db.query(User).filter_by(username=username.lower()).first()
+    
+    if not user:
+        return UserResponse(status_code=404, message="User not found", data=None)
+
+    #generate otp
+    otp = random.randint(100000, 999999)
+
+    return UserResponse(status_code=200, message="OTP sent successfully", data=otp)
+
+
 @auth_router.post("/change_password/")
 async def change_password(
     user: UserAuthentication, request: Request, db: Session = Depends(get_db)
