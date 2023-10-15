@@ -6,20 +6,19 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.services.services import hash_password
 from fastapi_sso.sso.google import GoogleSSO
+from app.services.mail_service import send_otp
+
 from app.settings import (
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_REDIRECT_URL,
 )
-
 from app.models.user_models import (
     User,
     UserResponse,
     UserAuthentication,
     LogoutResponse,
 )
-
-
 from fastapi import (
     Depends,
     HTTPException,
@@ -137,8 +136,8 @@ async def logout_user(_: Session = Depends(get_db)) -> LogoutResponse:
         )
 
 
-@auth_router.post("/send_otp/")
-async def send_otp(
+@auth_router.post("/request_otp/")
+async def request_otp(
     username: str,
     db: Session = Depends(get_db)
  ) -> UserResponse:
