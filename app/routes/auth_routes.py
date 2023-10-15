@@ -126,17 +126,14 @@ async def login_user(
 
     actual_user_password = needed_user.hashed_password
 
-    # Validating the entered password
-    result = bcrypt.checkpw(hashed_password, actual_user_password)
-
-    if not result:
+    if _ := bcrypt.checkpw(hashed_password, actual_user_password):
+        return UserResponse(
+            status_code=200,
+            message="Login Successful",
+            username=user.username.lower(),
+        )
+    else:
         raise HTTPException(status_code=401, detail="Invalid Password.")
-
-    return UserResponse(
-        status_code=200,
-        message="Login Successful",
-        username=user.username.lower(),
-    )
 
 
 @auth_router.post("/logout/")
