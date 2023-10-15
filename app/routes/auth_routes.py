@@ -64,8 +64,8 @@ async def signup_user(
     if not is_valid_email(user.email):
         raise HTTPException(status_code=400, detail="Not a valid email")
 
-    if not is_strong_password(user.password):
-        raise HTTPException(status_code=400, detail="Password not strong")
+    # if not is_strong_password(user.password):
+    #     raise HTTPException(status_code=400, detail="Password not strong")
 
     try:
         # converting password to array of bytes
@@ -168,15 +168,13 @@ async def request_otp(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter_by(username=username.lower()).first()
 
     if not user:
-        return UserResponse(
-            status_code=404, message="User not found", data=None
-        )
+        raise HTTPException(status_code=404, detail="User not found.")
 
     # generate otp
     otp = random.randint(100000, 999999)
 
     # send otp to user's email address
-    send_otp("yiradesat@gmail.com", otp)
+    send_otp(user.email, otp)
 
     db.close()
 
@@ -190,28 +188,29 @@ async def request_otp(username: str, db: Session = Depends(get_db)):
 
 @auth_router.post("/change_password/")
 async def change_password(
-    user: UserAuthentication, request: Request, db: Session = Depends(get_db)
+        username: str,
+        password: str,
+        request: Request, db: Session = Depends(get_db)
 ) -> UserResponse:
     """
     Changes the password of a user.
 
     Args:
-        user (UserAuthentication): The user authentication data.
+        username (str): The user's username
+        password (str): The user's new password
         db (Session, optional): The db session. Defaults to Depends(get_db).
 
     Returns:
         UserResponse: The response object.
     """
     requested_user = (
-        db.query(User).filter_by(username=user.username.lower()).first()
+        db.query(User).filter_by(username=username.lower()).first()
     )
 
     if not requested_user:
-        return UserResponse(
-            status_code=404, message="User not found", data=None
-        )
+        raise HTTPException(status_code=404, detail="User not found.")
 
-    new_password = hash_password(user.password)
+    new_password = hash_password(password)
 
     requested_user.hashed_password = new_password
 
@@ -221,7 +220,7 @@ async def change_password(
     return UserResponse(
         status_code=200,
         message="Password changed successfully",
-        username=user.username.lower(),
+        username=username.lower(),
     )
 
 
