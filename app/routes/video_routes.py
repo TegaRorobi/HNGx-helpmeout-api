@@ -286,13 +286,7 @@ def stream_video(video_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Video not found.")
 
     if video.status == "processing":
-        video.original_location = merge_blobs(video.username, video_id)
-        if not video.original_location:
-            db.close()
-            raise HTTPException(status_code=404, detail="No blobs found.")
-        video.status = "completed"
-        db.commit()
-        db.close()
+        raise HTTPException(status_code=404, detail="Video not ready.")
 
     return FileResponse(video.original_location, media_type="video/mp4")
 
