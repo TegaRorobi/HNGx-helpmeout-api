@@ -1,34 +1,34 @@
 """ This module contains the routes for user authentication. """
-import bcrypt
 import random
+
+import bcrypt
+from fastapi import (
+    Depends,
+    HTTPException,
+    APIRouter,
+    Request,
+)
+from fastapi_sso.sso.google import GoogleSSO
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+
 from app.database import get_db
-from app.services.services import hash_password, is_valid_email, is_strong_password
-from fastapi_sso.sso.google import GoogleSSO
-
-from fastapi_sso.sso.facebook import FacebookSSO
-from fastapi.responses import RedirectResponse
-import re
-
-from app.services.mail_service import send_otp
-
-from app.settings import (
-    GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET,
-    GOOGLE_REDIRECT_URL,
-)
 from app.models.user_models import (
     User,
     UserResponse,
     UserAuthentication,
     LogoutResponse,
 )
-from fastapi import (
-    Depends,
-    HTTPException,
-    APIRouter,
-    Request,
+from app.services.mail_service import send_otp
+from app.services.services import (
+    hash_password,
+    is_valid_email,
+    is_strong_password,
+)
+from app.settings import (
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_REDIRECT_URL,
 )
 
 BASE_URL = "/srce/api"
@@ -36,9 +36,8 @@ BASE_URL = "/srce/api"
 auth_router = APIRouter(prefix=BASE_URL)
 
 google_sso = GoogleSSO(
-    GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URL)
-
-
+    GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URL
+)
 
 
 @auth_router.post("/signup/", response_model=UserResponse)
@@ -60,29 +59,23 @@ async def signup_user(
     """
 
     if not user.email:
-        raise HTTPException(
-            status_code=400, detail="Email field is empty"
-        )
-    
-    
+        raise HTTPException(status_code=400, detail="Email field is empty")
+
     if not is_valid_email(user.email):
+        raise HTTPException(status_code=400, detail="Not a valid email")
 
-        raise HTTPException(
-            status_code=400, detail="Not a valid email"
-        )
-    
     if not is_strong_password(user.password):
-        
-        raise HTTPException(
-            status_code=400, detail="Password not strong"
-        )
-    
-    try:
+        raise HTTPException(status_code=400, detail="Password not strong")
 
+    try:
         # converting password to array of bytes
         hashed_password = hash_password(user.password)
 
-        new_user = User(username=user.username.lower(), hashed_password=hashed_password, email=user.email)
+        new_user = User(
+            username=user.username.lower(),
+            hashed_password=hashed_password,
+            email=user.email,
+        )
 
         db.add(new_user)
         db.commit()
@@ -97,7 +90,8 @@ async def signup_user(
 
     except IntegrityError as err:
         raise HTTPException(
-            status_code=400, detail="Username is not unique") from err
+            status_code=400, detail="Username is not unique"
+        ) from err
 
 
 @auth_router.post("/login/", response_model=UserResponse)
@@ -116,8 +110,9 @@ async def login_user(
         UserResponse: The response object.
     """
 
-    needed_user = db.query(User).filter_by(
-        username=user.username.lower()).first()
+    needed_user = (
+        db.query(User).filter_by(username=user.username.lower()).first()
+    )
 
     db.close()
 
@@ -131,17 +126,14 @@ async def login_user(
 
     actual_user_password = needed_user.hashed_password
 
-    # Validating the entered password
-    result = bcrypt.checkpw(hashed_password, actual_user_password)
-
-    if not result:
+    if _ := bcrypt.checkpw(hashed_password, actual_user_password):
+        return UserResponse(
+            status_code=200,
+            message="Login Successful",
+            username=user.username.lower(),
+        )
+    else:
         raise HTTPException(status_code=401, detail="Invalid Password.")
-
-    return UserResponse(
-        status_code=200,
-        message="Login Successful",
-        username=user.username.lower()
-    )
 
 
 @auth_router.post("/logout/")
@@ -157,18 +149,14 @@ async def logout_user(_: Session = Depends(get_db)) -> LogoutResponse:
     """
 
     return LogoutResponse(
-        status_code=200,
-        message="User Logged out successfully"
-        )
+        status_code=200, message="User Logged out successfully"
+    )
 
 
 @auth_router.post("/request_otp/")
-async def request_otp(
-    username: str,
-    db: Session = Depends(get_db)
- ):
+async def request_otp(username: str, db: Session = Depends(get_db)):
     """
-    Sends a 6 digit code to the user's email address.
+    Sends a 6-digit code to the user's email address.
 
     Args:
         username (str): The user's username.
@@ -181,10 +169,8 @@ async def request_otp(
 
     if not user:
         return UserResponse(
-            status_code=404,
-            message="User not found",
-            data=None
-            )
+            status_code=404, message="User not found", data=None
+        )
 
     # generate otp
     otp = random.randint(100000, 999999)
@@ -198,7 +184,7 @@ async def request_otp(
         "status_code": 200,
         "message": "OTP sent successfully",
         "username": username.lower(),
-        "verification_code": otp
+        "verification_code": otp,
     }
 
 
@@ -216,15 +202,14 @@ async def change_password(
     Returns:
         UserResponse: The response object.
     """
-    requested_user = db.query(User).filter_by(
-        username=user.username.lower()).first()
+    requested_user = (
+        db.query(User).filter_by(username=user.username.lower()).first()
+    )
 
     if not requested_user:
         return UserResponse(
-            status_code=404,
-            message="User not found",
-            data=None
-            )
+            status_code=404, message="User not found", data=None
+        )
 
     new_password = hash_password(user.password)
 
@@ -256,11 +241,11 @@ async def google_callback(
     Process Login response from Google and return user info
 
     Args:
-    -   request: The HTTPS request object
+        request: The HTTPS request object
         db: The database session object
 
     Return:
-    -   UserResponse: A response containing success or failure message
+        UserResponse: A response containing success or failure message
     """
 
     with google_sso:
@@ -268,7 +253,8 @@ async def google_callback(
 
     if not user:
         raise HTTPException(
-            status_code=400, detail="Failed to Login to Google")
+            status_code=400, detail="Failed to Login to Google"
+        )
 
     user_email = user.email
     user_display_name = user.display_name.lower()
@@ -279,7 +265,9 @@ async def google_callback(
     # Adds the user to the db if the user doesn't exist
     if not user_in_db:
         password = hash_password(user_email)
-        new_user = User(username=user_email, hashed_password=password, email=user_email)
+        new_user = User(
+            username=user_email, hashed_password=password, email=user_email
+        )
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
@@ -287,6 +275,6 @@ async def google_callback(
 
     return UserResponse(
         status_code=200,
-        message="User Logged in Successfuly",
+        message="User Logged in Successfully!",
         username=user_display_name,
     )

@@ -35,7 +35,7 @@ class Video(Base):
         default="processing",
     )
     is_public: bool = Column(Boolean, default=True)
-    public_access_expiry_date: Optional[datetime] = Column(DateTime, nullable=True)
+    pa_expiry_date: Optional[datetime] = Column(DateTime, nullable=True)
 
     user = relationship("User", backref="videos")
 

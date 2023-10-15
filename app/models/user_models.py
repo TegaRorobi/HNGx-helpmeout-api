@@ -16,18 +16,18 @@ from app.database import Base
 
 
 class User(Base):
-    """ The user model """
+    """The user model"""
+
     __tablename__ = "users"
 
     id: int = Column(Integer, primary_key=True, index=True)
     username: str = Column(
         String, index=True, unique=True, nullable=False, default=None
     )
-    email: str = Column(String, nullable=True, default=None)
+    email: Optional[str] = Column(String, nullable=True, default=None)
     hashed_password: str = Column(String, nullable=False)
     created_date: DateTime = Column(DateTime, server_default=func.now())
     updated_date: Optional[DateTime] = Column(DateTime, onupdate=func.now())
-    email: Optional[str] = Column(String, nullable=True, default=None)
     is_deleted: bool = Column(Boolean, default=False)
 
     # Add a unique constraint on 'username' and 'hashed_password' combination
@@ -37,24 +37,28 @@ class User(Base):
 
 
 class UserRequest(BaseModel):
-    """ The user request model """
+    """The user request model"""
+
     username: str
     email: Optional[str]
 
 
 class UserAuthentication(UserRequest):
-    """ The user authentication model """
+    """The user authentication model"""
+
     password: str
 
 
 class UserResponse(BaseModel):
-    """ The user response model """
+    """The user response model"""
+
     message: str
     status_code: int
     username: Optional[str] = None
 
 
 class LogoutResponse(BaseModel):
-    """ The logout response model """
+    """The logout response model"""
+
     message: str
     status_code: int

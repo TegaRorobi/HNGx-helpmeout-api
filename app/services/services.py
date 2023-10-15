@@ -2,10 +2,11 @@ import asyncio
 import glob
 import json
 import os
+import re
 import subprocess
+from typing import Match
 
 import bcrypt
-import re
 import nanoid
 from deepgram import Deepgram
 from fastapi import HTTPException
@@ -13,7 +14,14 @@ from fastapi import Request
 
 from app.database import get_db
 from app.models.video_models import Video
-from app.settings import VIDEO_DIR, DEEPGRAM_API_KEY, EMAIL_REGEX, PASSWORD_REGEX
+from app.settings import (
+    MEDIA_DIR,
+    VIDEO_DIR,
+    DEEPGRAM_API_KEY,
+    EMAIL_REGEX,
+    PASSWORD_REGEX,
+)
+
 
 def process_video(
     video_id: str,
@@ -211,8 +219,19 @@ def create_directory(*args):
         None
     """
     for path in args:
-        if not os.path.isdir(path):
-            os.makedirs(path, exist_ok=True)
+        if not is_valid_path(path):
+            raise ValueError("Invalid directory path")
+        # Use os.path.abspath to get an absolute path.
+        abs_path = os.path.abspath(path)
+
+        # Ensure the absolute path is within a safe directory.
+        # Our safe directory here is the media directory.
+        safe_root = os.path.abspath(MEDIA_DIR)
+        if not abs_path.startswith(safe_root):
+            raise ValueError("Path is not allowed")
+        # Create the directory if it doesn't exist.
+        if not os.path.isdir(abs_path):
+            os.makedirs(abs_path, exist_ok=True)
 
 
 def save_blob(
@@ -232,19 +251,19 @@ def save_blob(
     """
     # Create the directory structure if it doesn't exist
     user_dir = os.path.join(VIDEO_DIR, username)
-    temp_video_dir = os.path.join(user_dir, video_id)
-    create_directory(user_dir, temp_video_dir)
+    video_dir = os.path.join(user_dir, video_id)
+    create_directory(user_dir, video_dir)
 
     # Save the blob
     blob_filename = f"{blob_index}.mp4"
-    blob_path = os.path.join(temp_video_dir, blob_filename)
+    blob_path = os.path.join(video_dir, blob_filename)
     with open(blob_path, "wb") as f:
         f.write(blob)
 
     return blob_path
 
 
-def merge_blobs(username: str, video_id: str) -> str:
+def merge_blobs(username: str, video_id: str) -> str | None:
     """
     Merges video blobs/chunks to form the complete video.
 
@@ -280,7 +299,7 @@ def merge_blobs(username: str, video_id: str) -> str:
     return merged_video_path
 
 
-def generate_id():
+def generate_id() -> str:
     """
     Generate a unique ID for a video.
 
@@ -307,7 +326,7 @@ def get_transcript(audio_file: str, output_path: str) -> None:
 
 async def generate_transcript(
     audio_file: str, save_to: str, api_key: str, file_format: str = "json"
-):
+) -> str:
     """
     Generate a transcript for an audio file using Deepgram's API.
 
@@ -409,18 +428,17 @@ def convert_to_json(transcript_data: dict, output_path: str) -> str:
     return output_path
 
 
-def hash_password(password: str):
-
+def hash_password(password: str) -> str:
     pw_bytes = password.encode("utf-8")
 
     # generating the salt
     salt = bcrypt.gensalt()
 
     # Hashing the password
-    return  bcrypt.hashpw(pw_bytes, salt)
+    return bcrypt.hashpw(pw_bytes, salt)
 
 
-def get_current_user(request: Request):
+def get_current_user(request: Request) -> dict:
     """
     Parameters:
         request: The request object.
@@ -446,10 +464,65 @@ def is_owner(request: Request, video_owner: str) -> bool:
 
     return user.get("username") == video_owner
 
-def is_valid_email(email)->bool:
 
+def is_valid_email(email: str) -> Match[str] | None:
+    """
+    Checks if the email is valid.
+
+    Parameters:
+        email (str): The email address to be validated.
+
+    Returns:
+        bool: True if the email is valid; otherwise, False.
+    """
     return re.fullmatch(EMAIL_REGEX, email)
 
-def is_strong_password(password)->bool:
 
+def is_strong_password(password: str) -> Match[str] | None:
+    """
+    Checks if the password is strong.
+
+    Parameters:
+        password (str): The password to be validated.
+
+    Returns:
+        bool: True if the password is strong; otherwise, False.
+    """
     return re.fullmatch(PASSWORD_REGEX, password)
+
+
+def is_valid_path(path) -> bool:
+    """
+    Validate a directory path.
+
+    Args:
+        path (str): The directory path to validate.
+
+    Returns:
+        bool: True if the path is valid, False otherwise.
+    """
+    # Define a regex pattern for an allowed directory name (alphanumeric, underscores and a single period).
+    allowed_pattern = re.compile(r"^[a-zA-Z0-9_.]+$")
+
+    # Ensure the path is a string and does not contain harmful characters.
+    if not isinstance(path, str) or not path:
+        return False
+
+    # Split the path into components to check for problematic sequences.
+    path_components = path.split(os.sep)
+
+    # Check each component of the path.
+    for component in path_components:
+        # Check for more than one "." character in a component.
+        if component.count(".") > 1:
+            return False
+
+        # Check for disallowed directory separators.
+        if os.sep in component or (os.altsep and os.altsep in component):
+            return False
+
+        # Check against the allowlist pattern.
+        if not allowed_pattern.match(component):
+            return False
+
+    return True
