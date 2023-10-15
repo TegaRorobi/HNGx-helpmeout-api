@@ -491,7 +491,7 @@ def is_strong_password(password: str) -> Match[str] | None:
     return re.fullmatch(PASSWORD_REGEX, password)
 
 
-def is_valid_path(path):
+def is_valid_path(path) -> bool:
     """
     Validate a directory path.
 
