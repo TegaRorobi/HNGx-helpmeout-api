@@ -140,7 +140,7 @@ async def logout_user(_: Session = Depends(get_db)) -> LogoutResponse:
 async def request_otp(
     username: str,
     db: Session = Depends(get_db)
- ) -> UserResponse:
+ ):
     """
     Sends a 6 digit code to the user's email address.
 
@@ -164,7 +164,16 @@ async def request_otp(
     otp = random.randint(100000, 999999)
 
     # send otp to user's email address
-    send_otp(user.email, otp)
+    send_otp("yiradesat@gmail.com", otp)
+
+    db.close()
+
+    return {
+        "status_code": 200,
+        "message": "OTP sent successfully",
+        "username": username.lower(),
+        "verification_code": otp
+    }
 
 
 @auth_router.post("/change_password/")

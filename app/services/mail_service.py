@@ -64,7 +64,7 @@ def send_otp(recepient_address: str, otp: str):
     msg = EmailMessage()
     msg["Subject"] = "Forgotten Helpmeout Password"
     msg["From"] = formataddr((EMAIL_NAME, EMAIL_ADDRESS))
-    msg["To"] = "yiradesat@gmail.com"
+    msg["To"] = recepient_address
 
     with open("app/services/forgot_password.mjml", "rb") as f:
         mail = mjml_to_html(f)
