@@ -28,7 +28,7 @@ def send_video(username: str, video_id: str, recepient_address: str):
     """
     msg = EmailMessage()
     msg["Subject"] = "HelpMeOut Screen Recorder"
-    msg["From"] = formataddr(EMAIL_NAME, EMAIL_ADDRESS)
+    msg["From"] = formataddr((EMAIL_NAME, EMAIL_ADDRESS))
     msg["To"] = recepient_address
 
     with open("app/services/video_mail.mjml", "rb") as f:
@@ -63,8 +63,8 @@ def send_otp(recepient_address: str, otp: str):
     """
     msg = EmailMessage()
     msg["Subject"] = "Forgotten Helpmeout Password"
-    msg["From"] = formataddr(EMAIL_NAME, EMAIL_ADDRESS)
-    msg["To"] = recepient_address
+    msg["From"] = formataddr((EMAIL_NAME, EMAIL_ADDRESS))
+    msg["To"] = "yiradesat@gmail.com"
 
     with open("app/services/forgot_password.mjml", "rb") as f:
         mail = mjml_to_html(f)
