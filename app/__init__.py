@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.routes.video_routes import router
+from app.routes.video_routes import video_router
 from app.routes.auth_routes import auth_router
 
 
@@ -27,7 +27,7 @@ def create_app() -> FastAPI:
     )
 
     # Include routes
-    app.include_router(router)
+    app.include_router(video_router)
     app.include_router(auth_router)
 
     app.add_middleware(SessionMiddleware, secret_key="")
