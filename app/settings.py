@@ -17,6 +17,7 @@ VIDEO_DIR = f"{MEDIA_DIR}/uploads/"
 COMPRESSED_DIR = f"{MEDIA_DIR}/compressed/"
 THUMBNAIL_DIR = f"{MEDIA_DIR}/thumbnails/"
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API")
+EMAIL_NAME = os.getenv("EMAIL_NAME")
 EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
 EMAIL_HOST = os.environ.get("EMAIL_HOST")

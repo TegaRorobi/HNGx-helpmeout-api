@@ -23,7 +23,7 @@ GET_VIDEO_ID_URL = f"{URL}/start-recording/"
 ENDPOINT_URL = f"{URL}/upload-blob/"
 
 BLOB_SIZE = 1 * 1024 * 1024  # 1MB by default. Adjust as needed.
-USERNAME = "Destiny"
+USERNAME = "Desftiny"
 
 
 def get_video_id(username: str) -> str:
