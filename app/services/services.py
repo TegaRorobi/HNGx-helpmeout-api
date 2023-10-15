@@ -5,6 +5,7 @@ import os
 import subprocess
 
 import bcrypt
+import re
 import nanoid
 from deepgram import Deepgram
 from fastapi import HTTPException
@@ -12,8 +13,7 @@ from fastapi import Request
 
 from app.database import get_db
 from app.models.video_models import Video
-from app.settings import VIDEO_DIR, DEEPGRAM_API_KEY
-
+from app.settings import VIDEO_DIR, DEEPGRAM_API_KEY, EMAIL_REGEX, PASSWORD_REGEX
 
 def process_video(
     video_id: str,
@@ -445,3 +445,11 @@ def is_owner(request: Request, video_owner: str) -> bool:
     user = get_current_user(request)
 
     return user.get("username") == video_owner
+
+def is_valid_email(email)->bool:
+
+    return re.fullmatch(EMAIL_REGEX, email)
+
+def is_strong_password(password)->bool:
+
+    return re.fullmatch(PASSWORD_REGEX, password)

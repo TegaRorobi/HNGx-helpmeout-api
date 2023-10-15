@@ -1,7 +1,6 @@
 """ Video routes for the FastAPI application. """
 import base64
 import datetime
-import json
 import os
 from fastapi import (
     APIRouter,
@@ -10,12 +9,11 @@ from fastapi import (
     HTTPException,
     Request,
 )
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user_models import User
 from app.models.video_models import Video, VideoBlob
-from app.models.user_models import LogoutResponse
 from app.services.mail_service import send_video
 from app.services.services import (
     save_blob,
@@ -26,13 +24,10 @@ from app.services.services import (
     is_owner,
 )
 
-router = APIRouter(prefix="/srce/api")
+video_router = APIRouter(prefix="/srce/api")
 
-@router.get("/")
-async def home():
-    return {"Message": "NOTHING LIKE 127.0.0.1"}
 
-@router.post("/start-recording/")
+@video_router.post("/start-recording/")
 def start_recording(
     username: str,
     db: Session = Depends(get_db),
@@ -78,7 +73,7 @@ def start_recording(
     }
 
 
-@router.post("/upload-blob/")
+@video_router.post("/upload-blob/")
 def upload_video_blob(
     background_tasks: BackgroundTasks,
     request: Request,
@@ -107,7 +102,10 @@ def upload_video_blob(
     # If the user is not found, raise an exception
     user = db.query(User).filter(User.username == video_data.username).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found.")
+        raise HTTPException(
+            status_code=404,
+            detail="User not found. Please start recording again."
+        )
 
     # If the video is not found, raise an exception
     if not video:
@@ -115,7 +113,10 @@ def upload_video_blob(
 
     # If the video is already completed, raise an exception
     if video.status == "completed":
-        raise HTTPException(status_code=400, detail="Recording already processed.")
+        raise HTTPException(
+            status_code=403,
+            detail="Video already processed. Please start recording again.",
+        )
 
     # Decode the blob data
     blob_data = base64.b64decode(video_data.blob_object)
@@ -136,7 +137,10 @@ def upload_video_blob(
         )
         if not video.original_location:
             db.close()
-            raise HTTPException(status_code=404, detail="No blobs found.")
+            raise HTTPException(
+                status_code=404,
+                detail="No blobs found. Please start recording again.",
+            )
 
         video.status = "completed"
         db.commit()
@@ -149,21 +153,24 @@ def upload_video_blob(
             video_data.username,
         )
 
-        vid_url = request.url_for("stream_video", video_id=video_data.video_id)
-        response = {
-            "message": "Blobs received successfully, video is being processed",
-            "video_id": video_data.video_id,
-            "video_url": str(vid_url),
-        }
         db.close()
-        return json.dumps(response, indent=2)
+        video_id = video_data.video_id
+        video_url = str(request.url_for("stream_video", video_id=video_id))
+        return {
+            "message": "Blobs received successfully, video is being processed",
+            "video_id": video_id,
+            "video_url": video_url
+        }
 
     db.close()
 
-    return {"msg": "Chunk received successfully!"}
+    return {
+        "message": "Blob received successfully",
+        "video_id": video_data.video_id
+        }
 
 
-@router.get("/recording/user/{username}")
+@video_router.get("/recording/user/{username}")
 def get_videos(username: str, request: Request, db: Session = Depends(get_db)):
     """
     Returns a list of videos associated with the given username.
@@ -182,8 +189,11 @@ def get_videos(username: str, request: Request, db: Session = Depends(get_db)):
     videos = db.query(Video).filter(Video.username == username).all()
 
     if not videos:
-        raise HTTPException(status_code=404, detail="User Videos not found.")
-    
+        raise HTTPException(
+            status_code=404,
+            detail="No videos found for the given username."
+        )
+
     db.close()
 
     # Replace the absolute paths with downloadable URLs
@@ -202,7 +212,7 @@ def get_videos(username: str, request: Request, db: Session = Depends(get_db)):
     return videos
 
 
-@router.get("/recording/{video_id}")
+@video_router.get("/recording/{video_id}")
 def get_video(video_id: str, request: Request, db: Session = Depends(get_db)):
     """
     Retrieve a specific video by its video ID.
@@ -223,11 +233,17 @@ def get_video(video_id: str, request: Request, db: Session = Depends(get_db)):
     db.close()
 
     if not video:
-        raise HTTPException(status_code=404, detail="Video not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Video not found."
+        )
 
     # Check if the video is public and if the current user is the owner
     if not video.is_public and not is_owner(request, video.username):
-        raise HTTPException(status_code=403, detail="Access denied: Private video or expired public access.")
+        raise HTTPException(
+            status_code=403,
+            detail="Video is not public."
+        )
 
     # Check if public access period to video has expired,
     # make video private if it has
@@ -253,7 +269,7 @@ def get_video(video_id: str, request: Request, db: Session = Depends(get_db)):
     return video
 
 
-@router.get("/video/{video_id}.mp4")
+@video_router.get("/video/{video_id}.mp4")
 def stream_video(video_id: str, db: Session = Depends(get_db)):
     """
     Stream a video by its video ID.
@@ -272,20 +288,27 @@ def stream_video(video_id: str, db: Session = Depends(get_db)):
     video = db.query(Video).filter(Video.id == video_id).first()
 
     if not video:
-        raise HTTPException(status_code=404, detail="Video not found.")
+        raise HTTPException(
+            status_code=404,
+            detail="Video not found."
+        )
 
     if video.status == "processing":
         video.original_location = merge_blobs(video.username, video_id)
         if not video.original_location:
             db.close()
-            raise HTTPException(status_code=404, detail="No blobs found.")
+            raise HTTPException(
+                status_code=404,
+                detail="No blobs found."
+            )
         video.status = "completed"
         db.commit()
         db.close()
 
     return FileResponse(video.original_location, media_type="video/mp4")
 
-@router.get("/download/{video_id}")
+
+@video_router.get("/download/{video_id}")
 def download_video(video_id: str, db: Session = Depends(get_db)):
     """
     Triggers download of a video by its video ID.
@@ -315,9 +338,14 @@ def download_video(video_id: str, db: Session = Depends(get_db)):
         db.commit()
         db.close()
 
-    return FileResponse(video.original_location, media_type="video/mp4", filename=f"{video.title}.mp4")
+    return FileResponse(
+        video.original_location,
+        media_type="video/mp4",
+        filename=f"{video.title}.mp4"
+        )
 
-@router.get("/transcript/{video_id}.json")
+
+@video_router.get("/transcript/{video_id}.json")
 def get_transcript(video_id: str, db: Session = Depends(get_db)):
     """
     Get the transcript for a video by its video ID.
@@ -344,7 +372,7 @@ def get_transcript(video_id: str, db: Session = Depends(get_db)):
     return FileResponse(video.transcript_location, media_type="text/plain")
 
 
-@router.get("/thumbnail/{video_id}.jpeg")
+@video_router.get("/thumbnail/{video_id}.jpeg")
 def get_thumbnail(video_id: str, db: Session = Depends(get_db)):
     """
     Get the thumbnail for a video by its video ID.
@@ -371,7 +399,7 @@ def get_thumbnail(video_id: str, db: Session = Depends(get_db)):
     return FileResponse(video.thumbnail_location, media_type="image/jpeg")
 
 
-@router.patch("/video/{video_id}")
+@video_router.patch("/video/{video_id}")
 def update_title(video_id: str, title: str, db: Session = Depends(get_db)):
     """
     Updates the title of a video.
@@ -400,7 +428,7 @@ def update_title(video_id: str, title: str, db: Session = Depends(get_db)):
     return {"msg": "Title updated successfully!"}
 
 
-@router.patch("/videos/transfer/")
+@video_router.patch("/videos/transfer/")
 def transfer_videos(
     username1: str, username2: str, db: Session = Depends(get_db)
 ):
@@ -438,7 +466,7 @@ def transfer_videos(
     return {"msg": "Videos transferred successfully!"}
 
 
-@router.delete("/video/{video_id}")
+@video_router.delete("/video/{video_id}")
 def delete_video(video_id: str, db: Session = Depends(get_db)):
     """
     Deletes a video from the database and removes its associated files
@@ -475,20 +503,23 @@ def delete_video(video_id: str, db: Session = Depends(get_db)):
     db.close()
     raise HTTPException(status_code=404, detail="Video not found.")
 
+
 # An endpoint to send a vudeo to user's email using fastapi-mail
-@router.post("/send-email/{video_id}")
+@video_router.post("/send-email/{video_id}")
 def send_email(
     video_id: str,
+    sender: str,
     receipient: str,
     db: Session = Depends(get_db),
 ):
     """
     Sends an email to the user with the video embedded in the email.
-    
+
     Parameters:
         video_id (str): The id of the video to be sent to the user.
+        sender (str): The sender's name or an empty string for anonymous sender.
         email (str): The email address of the user.
-    
+
     Returns:
         message (str): A message indicating whether the email was sent
             successfully.
@@ -502,13 +533,18 @@ def send_email(
 
     if video.status == "processing":
         raise HTTPException(status_code=404, detail="Video not processed yet.")
-
-
     try:
-        send_video(video.username, video_id, receipient)
+        # If sender is anonymous, change sender's name to 'A user'
+        username = "A user" if sender == "" else sender
+        send_video(username, video_id, receipient)
         db.close()
     except Exception as e:
         print(e)
         return {"message": "Email not sent!"}, 500
 
     return {"message": "Email sent successfully!"}
+
+
+@video_router.get("/{path:path}")
+async def custom_404_handler():
+    return RedirectResponse("/docs")
