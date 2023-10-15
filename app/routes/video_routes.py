@@ -2,6 +2,7 @@
 import base64
 import datetime
 import os
+
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -11,6 +12,7 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy.orm import Session
+
 from app.database import get_db
 from app.models.user_models import User
 from app.models.video_models import Video, VideoBlob
@@ -49,7 +51,7 @@ def start_recording(
 
     # Check if the user exists
     if not db.query(User).filter(User.username == username).first():
-        password = "asdfghjk"
+        password = "starhkzdidnotcontribute"
         hashed_password = hash_password(password)
         new_user = User(username=username, hashed_password=hashed_password)
 
@@ -104,7 +106,7 @@ def upload_video_blob(
     if not user:
         raise HTTPException(
             status_code=404,
-            detail="User not found. Please start recording again."
+            detail="User not found. Please start recording again.",
         )
 
     # If the video is not found, raise an exception
@@ -159,15 +161,15 @@ def upload_video_blob(
         return {
             "message": "Blobs received successfully, video is being processed",
             "video_id": video_id,
-            "video_url": video_url
+            "video_url": video_url,
         }
 
     db.close()
 
     return {
         "message": "Blob received successfully",
-        "video_id": video_data.video_id
-        }
+        "video_id": video_data.video_id,
+    }
 
 
 @video_router.get("/recording/user/{username}")
@@ -190,8 +192,7 @@ def get_videos(username: str, request: Request, db: Session = Depends(get_db)):
 
     if not videos:
         raise HTTPException(
-            status_code=404,
-            detail="No videos found for the given username."
+            status_code=404, detail="No videos found for the given username."
         )
 
     db.close()
@@ -218,7 +219,7 @@ def get_video(video_id: str, request: Request, db: Session = Depends(get_db)):
     Retrieve a specific video by its video ID.
 
     Parameters:
-        username (str): The username associated with the video.
+        request (Request): The FastAPI request object.
         video_id (str): The unique identifier of the video to retrieve.
         db (Session): The database session.
 
@@ -233,22 +234,16 @@ def get_video(video_id: str, request: Request, db: Session = Depends(get_db)):
     db.close()
 
     if not video:
-        raise HTTPException(
-            status_code=404,
-            detail="Video not found."
-        )
+        raise HTTPException(status_code=404, detail="Video not found.")
 
     # Check if the video is public and if the current user is the owner
     if not video.is_public and not is_owner(request, video.username):
-        raise HTTPException(
-            status_code=403,
-            detail="Video is not public."
-        )
+        raise HTTPException(status_code=403, detail="Video is not public.")
 
     # Check if public access period to video has expired,
     # make video private if it has
     if video.is_public and video.public_access_expiry_date:
-        current_datetime = datetime.datetime.utcnow()
+        current_datetime = datetime.datetime.now(datetime.timezone.utc)
         if current_datetime >= video.public_access_expiry_date:
             video.is_public = False
             db.add(video)
@@ -288,19 +283,13 @@ def stream_video(video_id: str, db: Session = Depends(get_db)):
     video = db.query(Video).filter(Video.id == video_id).first()
 
     if not video:
-        raise HTTPException(
-            status_code=404,
-            detail="Video not found."
-        )
+        raise HTTPException(status_code=404, detail="Video not found.")
 
     if video.status == "processing":
         video.original_location = merge_blobs(video.username, video_id)
         if not video.original_location:
             db.close()
-            raise HTTPException(
-                status_code=404,
-                detail="No blobs found."
-            )
+            raise HTTPException(status_code=404, detail="No blobs found.")
         video.status = "completed"
         db.commit()
         db.close()
@@ -341,8 +330,8 @@ def download_video(video_id: str, db: Session = Depends(get_db)):
     return FileResponse(
         video.original_location,
         media_type="video/mp4",
-        filename=f"{video.title}.mp4"
-        )
+        filename=f"{video.title}.mp4",
+    )
 
 
 @video_router.get("/transcript/{video_id}.json")
@@ -509,7 +498,7 @@ def delete_video(video_id: str, db: Session = Depends(get_db)):
 def send_email(
     video_id: str,
     sender: str,
-    receipient: str,
+    recepient: str,
     db: Session = Depends(get_db),
 ):
     """
@@ -518,13 +507,14 @@ def send_email(
     Parameters:
         video_id (str): The id of the video to be sent to the user.
         sender (str): The sender's name or an empty string for anonymous sender.
-        email (str): The email address of the user.
+        recipient (str): The email address of the user.
+        db (Session, optional): The database session. Defaults to the
 
     Returns:
         message (str): A message indicating whether the email was sent
             successfully.
     """
-    if not video_id or not receipient:
+    if not video_id or not recepient:
         return None
 
     video = db.query(Video).filter(Video.id == video_id).first()
@@ -536,7 +526,7 @@ def send_email(
     try:
         # If sender is anonymous, change sender's name to 'A user'
         username = "A user" if sender == "" else sender
-        send_video(username, video_id, receipient)
+        send_video(username, video_id, recepient)
         db.close()
     except Exception as e:
         print(e)

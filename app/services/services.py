@@ -2,10 +2,10 @@ import asyncio
 import glob
 import json
 import os
+import re
 import subprocess
 
 import bcrypt
-import re
 import nanoid
 from deepgram import Deepgram
 from fastapi import HTTPException
@@ -13,7 +13,13 @@ from fastapi import Request
 
 from app.database import get_db
 from app.models.video_models import Video
-from app.settings import VIDEO_DIR, DEEPGRAM_API_KEY, EMAIL_REGEX, PASSWORD_REGEX
+from app.settings import (
+    VIDEO_DIR,
+    DEEPGRAM_API_KEY,
+    EMAIL_REGEX,
+    PASSWORD_REGEX,
+)
+
 
 def process_video(
     video_id: str,
@@ -280,7 +286,7 @@ def merge_blobs(username: str, video_id: str) -> str:
     return merged_video_path
 
 
-def generate_id():
+def generate_id() -> str:
     """
     Generate a unique ID for a video.
 
@@ -307,7 +313,7 @@ def get_transcript(audio_file: str, output_path: str) -> None:
 
 async def generate_transcript(
     audio_file: str, save_to: str, api_key: str, file_format: str = "json"
-):
+) -> str:
     """
     Generate a transcript for an audio file using Deepgram's API.
 
@@ -409,18 +415,17 @@ def convert_to_json(transcript_data: dict, output_path: str) -> str:
     return output_path
 
 
-def hash_password(password: str):
-
+def hash_password(password: str) -> str:
     pw_bytes = password.encode("utf-8")
 
     # generating the salt
     salt = bcrypt.gensalt()
 
     # Hashing the password
-    return  bcrypt.hashpw(pw_bytes, salt)
+    return bcrypt.hashpw(pw_bytes, salt)
 
 
-def get_current_user(request: Request):
+def get_current_user(request: Request) -> dict:
     """
     Parameters:
         request: The request object.
