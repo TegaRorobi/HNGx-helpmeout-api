@@ -1,0 +1,47 @@
+<mjml>
+ <mj-body background-color="#EDECF0">
+   <mj-section padding-bottom="20px" padding-top="20px">
+     <mj-column vertical-align="middle" width="100%">
+       <mj-image align="center" padding="25px" src="https://github.com/hngx-org/helpmeout-api/blob/main/app/services/images/logoname.png?raw=true" width="125px"></mj-image>
+     </mj-column>
+   </mj-section>
+   
+   <mj-section padding-bottom="10px" padding-top="10px">
+     <mj-column vertical-align="middle" width="100%">
+          <mj-text align="center" font-size="22px"  font-weight="600" font-family="Work Sans" padding-left="25px" padding-right="25px"><span>Welcome to HelpMeOut! 👋</span></mj-text>
+        </mj-column>
+   </mj-section>
+   
+   <mj-section background-color="#fff" padding-bottom="20px" padding-top="20px">
+     <mj-column vertical-align="middle" width="100%">
+       <mj-text align="center" font-size="16px" color="#5E5E5E" font-family="Work Sans" padding-left="25px" padding-right="25px">Thank you for choosing HelpMeOut. Use the following OTP to complete your Sign Up procedures. OTP is valid for 10 minutes</mj-text>
+       <mj-text align="center" font-size="24px" background-color="#20c997" font-weight="bold" font-family="Work sans">{{signup_code}}</mj-text>
+  
+       <mj-text align="center" font-size="16px" font-family="Work Sans" padding-left="25px" color="#5E5E5E" padding-right="25px">Happy onboarding! <br />HelpMeOut team</mj-text>
+     </mj-column>
+     
+   </mj-section>
+    <mj-section>
+      <mj-column width="100%" align="center">
+        <mj-social mode="horizontal" icon-size="20px">
+          <mj-social-element name="facebook" href="/" background-color="#130A48" />
+          <mj-social-element name="twitter" href="/"
+            background-color="#130A48" />
+          <mj-social-element name="linkedin" href="/"
+            background-color="#130A48" />
+          <mj-social-element name="instagram" href="/"
+            background-color="#130A48" />
+        </mj-social>
+        <mj-text align="center" color="#666" font-size="12px">
+          Copyright &copy; 2023.
+        </mj-text>
+        <mj-text align="center" color="#666" font-size="12px">
+          HelpMeOut
+        </mj-text>
+        <mj-text align="center" color="#130A48" font-size="12px">
+          <a href="https://www.helpmeout.com" style="text-decoration: none;">www.helpmeout.com</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+ </mj-body>
+</mjml>
