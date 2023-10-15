@@ -242,9 +242,9 @@ def get_video(video_id: str, request: Request, db: Session = Depends(get_db)):
 
     # Check if public access period to video has expired,
     # make video private if it has
-    if video.is_public and video.public_access_expiry_date:
+    if video.is_public and video.pa_expiry_date:
         current_datetime = datetime.datetime.now(datetime.timezone.utc)
-        if current_datetime >= video.public_access_expiry_date:
+        if current_datetime >= video.pa_expiry_date:
             video.is_public = False
             db.add(video)
             db.commit()
@@ -468,8 +468,7 @@ def delete_video(video_id: str, db: Session = Depends(get_db)):
         HTTPException: If the video with the specified ID is not found
             in the database.
     """
-    video = db.query(Video).filter(Video.id == video_id).first()
-    if video:
+    if video := db.query(Video).filter(Video.id == video_id).first():
         if os.path.exists(str(video.original_location)):
             os.remove(str(video.original_location))
         if os.path.exists(str(video.thumbnail_location)):
@@ -487,12 +486,12 @@ def delete_video(video_id: str, db: Session = Depends(get_db)):
     raise HTTPException(status_code=404, detail="Video not found.")
 
 
-# An endpoint to send a vudeo to user's email using fastapi-mail
+# An endpoint to send a video to user's email using fastapi-mail
 @video_router.post("/send-email/{video_id}")
 def send_email(
     video_id: str,
     sender: str,
-    recepient: str,
+    recipient: str,
     db: Session = Depends(get_db),
 ):
     """
@@ -500,7 +499,7 @@ def send_email(
 
     Parameters:
         video_id (str): The id of the video to be sent to the user.
-        sender (str): The sender's name or an empty string for anonymous sender.
+        sender (str): The sender's name or an empty string for anonymous sender
         recipient (str): The email address of the user.
         db (Session, optional): The database session. Defaults to the
 
@@ -508,7 +507,7 @@ def send_email(
         message (str): A message indicating whether the email was sent
             successfully.
     """
-    if not video_id or not recepient:
+    if not video_id or not recipient:
         return None
 
     video = db.query(Video).filter(Video.id == video_id).first()
@@ -519,8 +518,8 @@ def send_email(
         raise HTTPException(status_code=404, detail="Video not processed yet.")
     try:
         # If sender is anonymous, change sender's name to 'A user'
-        username = "A user" if sender == "" else sender
-        send_video(username, video_id, recepient)
+        username = sender or "A user"
+        send_video(username, video_id, recipient)
         db.close()
     except Exception as e:
         print(e)
@@ -530,5 +529,11 @@ def send_email(
 
 
 @video_router.get("/{path:path}")
-async def custom_404_handler():
+async def custom_404_handler() -> RedirectResponse:
+    """
+    Redirects to the FastAPI docs page.
+
+    Returns:
+        RedirectResponse: A redirect response to the FastAPI docs page.
+    """
     return RedirectResponse("/docs")

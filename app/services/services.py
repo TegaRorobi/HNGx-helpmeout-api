@@ -4,6 +4,7 @@ import json
 import os
 import re
 import subprocess
+from typing import Match
 
 import bcrypt
 import nanoid
@@ -451,10 +452,28 @@ def is_owner(request: Request, video_owner: str) -> bool:
 
     return user.get("username") == video_owner
 
-def is_valid_email(email)->bool:
 
+def is_valid_email(email) -> Match[str] | None:
+    """
+    Checks if the email is valid.
+
+    Parameters:
+        email (str): The email address to be validated.
+
+    Returns:
+        bool: True if the email is valid; otherwise, False.
+    """
     return re.fullmatch(EMAIL_REGEX, email)
 
-def is_strong_password(password)->bool:
 
+def is_strong_password(password) -> Match[str] | None:
+    """
+    Checks if the password is strong.
+
+    Parameters:
+        password (str): The password to be validated.
+
+    Returns:
+        bool: True if the password is strong; otherwise, False.
+    """
     return re.fullmatch(PASSWORD_REGEX, password)
