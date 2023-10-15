@@ -4,7 +4,9 @@ import ssl
 from mjml import mjml_to_html
 import pystache
 from email.message import EmailMessage
+from email.utils import formataddr
 from app.settings import (
+    EMAIL_NAME,
     EMAIL_ADDRESS,
     EMAIL_PASSWORD,
     EMAIL_HOST,
@@ -26,7 +28,7 @@ def send_video(username: str, video_id: str, recepient_address: str):
     """
     msg = EmailMessage()
     msg["Subject"] = "HelpMeOut Screen Recorder"
-    msg["From"] = EMAIL_ADDRESS
+    msg["From"] = formataddr(EMAIL_NAME, EMAIL_ADDRESS)
     msg["To"] = recepient_address
 
     with open("app/services/video_mail.mjml", "rb") as f:
@@ -60,8 +62,8 @@ def send_otp(recepient_address: str, otp: str):
             successfully.
     """
     msg = EmailMessage()
-    msg["Subject"] = "HelpMeOut Screen Recorder"
-    msg["From"] = EMAIL_ADDRESS
+    msg["Subject"] = "Forgotten Helpmeout Password"
+    msg["From"] = formataddr(EMAIL_NAME, EMAIL_ADDRESS)
     msg["To"] = recepient_address
 
     with open("app/services/forgot_password.mjml", "rb") as f:
@@ -69,8 +71,7 @@ def send_otp(recepient_address: str, otp: str):
 
     mail = mail.html
     context = {
-        'recepient_address': recepient_address,
-        'otp': otp,
+        'verification_code': otp,
     }
     mail = pystache.render(mail, context)
 
