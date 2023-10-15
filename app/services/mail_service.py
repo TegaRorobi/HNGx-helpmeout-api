@@ -19,9 +19,10 @@ def send_video(username: str, video_id: str, recepient_address: str):
     Sends an email to the user with the video embedded in the email.
 
     Parameters:
-        video_id (str): The id of the video to be sent to the user.
-        recepient_address (str): The email address of the user.
-
+        username (str): The username of the sender.
+        video_id (str): The ID of the video to be sent to the user.
+        recepient_address (str): The email address of the user to send the video to.
+    
     Returns:
         message (str): A message indicating whether the email was sent
             successfully.
@@ -31,7 +32,7 @@ def send_video(username: str, video_id: str, recepient_address: str):
     msg["From"] = formataddr((EMAIL_NAME, EMAIL_ADDRESS))
     msg["To"] = recepient_address
 
-    with open("app/services/video_mail.mjml", "rb") as f:
+    with open(f"app/services/video_mail.mjml", "rb") as f:
         mail = mjml_to_html(f)
 
     mail = mail.html

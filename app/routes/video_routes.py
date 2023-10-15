@@ -508,6 +508,7 @@ def delete_video(video_id: str, db: Session = Depends(get_db)):
 @video_router.post("/send-email/{video_id}")
 def send_email(
     video_id: str,
+    sender: str,
     receipient: str,
     db: Session = Depends(get_db),
 ):
@@ -516,6 +517,7 @@ def send_email(
 
     Parameters:
         video_id (str): The id of the video to be sent to the user.
+        sender (str): The sender's name or an empty string for anonymous sender.
         email (str): The email address of the user.
 
     Returns:
@@ -532,7 +534,9 @@ def send_email(
     if video.status == "processing":
         raise HTTPException(status_code=404, detail="Video not processed yet.")
     try:
-        send_video(video.username, video_id, receipient)
+        # If sender is anonymous, change sender's name to 'A user'
+        username = "A user" if sender == "" else sender
+        send_video(username, video_id, receipient)
         db.close()
     except Exception as e:
         print(e)
