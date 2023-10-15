@@ -40,7 +40,7 @@ class UserRequest(BaseModel):
     """The user request model"""
 
     username: str
-    email: Optional[str]
+    email: Optional[str] = None
 
 
 class UserAuthentication(UserRequest):
