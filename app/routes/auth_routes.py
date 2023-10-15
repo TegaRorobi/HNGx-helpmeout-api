@@ -188,29 +188,28 @@ async def request_otp(username: str, db: Session = Depends(get_db)):
 
 @auth_router.post("/change_password/")
 async def change_password(
-        username: str,
-        password: str,
-        request: Request, db: Session = Depends(get_db)
+    user: UserAuthentication, request: Request, db: Session = Depends(get_db)
 ) -> UserResponse:
     """
     Changes the password of a user.
 
     Args:
-        username (str): The user's username
-        password (str): The user's new password
+        user (UserAuthentication): The user authentication data.
         db (Session, optional): The db session. Defaults to Depends(get_db).
 
     Returns:
         UserResponse: The response object.
     """
     requested_user = (
-        db.query(User).filter_by(username=username.lower()).first()
+        db.query(User).filter_by(username=user.username.lower()).first()
     )
 
     if not requested_user:
-        raise HTTPException(status_code=404, detail="User not found.")
+        return UserResponse(
+            status_code=404, message="User not found", data=None
+        )
 
-    new_password = hash_password(password)
+    new_password = hash_password(user.password)
 
     requested_user.hashed_password = new_password
 
@@ -220,16 +219,8 @@ async def change_password(
     return UserResponse(
         status_code=200,
         message="Password changed successfully",
-        username=username.lower(),
+        username=user.username.lower(),
     )
-
-
-@auth_router.get("/google/login/")
-async def google_login():
-    """Generate Login URL and redirect"""
-
-    with google_sso:
-        return await google_sso.get_login_redirect()
 
 
 @auth_router.get("/google/callback/")
