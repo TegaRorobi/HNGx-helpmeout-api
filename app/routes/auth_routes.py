@@ -64,8 +64,8 @@ async def signup_user(
     if not is_valid_email(user.email):
         raise HTTPException(status_code=400, detail="Not a valid email")
 
-    if not is_strong_password(user.password):
-        raise HTTPException(status_code=400, detail="Password not strong")
+    # if not is_strong_password(user.password):
+    #     raise HTTPException(status_code=400, detail="Password not strong")
 
     try:
         # converting password to array of bytes
@@ -174,7 +174,7 @@ async def request_otp(username: str, db: Session = Depends(get_db)):
     otp = random.randint(100000, 999999)
 
     # send otp to user's email address
-    send_otp("yiradesat@gmail.com", otp)
+    send_otp(user.email, otp)
 
     db.close()
 
