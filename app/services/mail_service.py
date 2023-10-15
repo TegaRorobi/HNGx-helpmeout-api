@@ -47,7 +47,7 @@ def send_video(username: str, video_id: str, recepient_address: str):
         smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
         smtp.send_message(msg)
 
-def send_otp(username: str, video_id: str, recepient_address: str):
+def send_otp(recepient_address: str, otp: str):
     """
     Sends an email to the user with the video embedded in the email.
     
@@ -64,12 +64,12 @@ def send_otp(username: str, video_id: str, recepient_address: str):
     msg["From"] = EMAIL_ADDRESS
     msg["To"] = recepient_address
 
-    with open(f"app/services/forgot_password_mail.mjml", "rb") as f:
+    with open(f"app/services/forgot_password.mjml", "rb") as f:
         mail = mjml_to_html(f)
 
     mail = mail.html
     context={
-        'email': email,
+        'recepient_address': recepient_address,
         'otp': otp,
     }
     mail = pystache.render(mail, context)

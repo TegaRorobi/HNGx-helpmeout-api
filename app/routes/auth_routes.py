@@ -142,7 +142,6 @@ async def logout_user(
         status_code=200, message="User Logged out successfully"
     )
 
-# an endooint to generate rwndom 6 digit code sends a forgot passsword email contsiningn the otp
 @auth_router.post("/send_otp/")
 async def send_otp(
         username: str,
@@ -165,8 +164,10 @@ async def send_otp(
 
     #generate otp
     otp = random.randint(100000, 999999)
+    
+    # send otp to user's email address
+    send_otp(user.email, otp)
 
-    return UserResponse(status_code=200, message="OTP sent successfully", data=otp)
 
 
 @auth_router.post("/change_password/")
