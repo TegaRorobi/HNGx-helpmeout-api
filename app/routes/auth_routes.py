@@ -5,10 +5,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 import os
 from app.database import get_db
-from app.services.services import hash_password
+from app.services.services import hash_password, is_valid_email, is_strong_password
 from fastapi_sso.sso.google import GoogleSSO
 from fastapi_sso.sso.facebook import FacebookSSO
 from fastapi.responses import RedirectResponse
+import re
 from app.settings import (
     GOOGLE_CLIENT_ID, 
     GOOGLE_CLIENT_SECRET, 
@@ -41,6 +42,8 @@ google_sso = GoogleSSO(
     GOOGLE_REDIRECT_URL
     ) 
 
+
+
 @auth_router.post("/signup/", response_model=UserResponse)
 async def signup_user(
     user: UserAuthentication, db: Session = Depends(get_db)
@@ -58,11 +61,31 @@ async def signup_user(
     Returns:
         UserResponse: The response object.
     """
+
+    if not user.email:
+        raise HTTPException(
+            status_code=400, detail="Email field is empty"
+        )
+    
+    
+    if not is_valid_email(user.email):
+
+        raise HTTPException(
+            status_code=400, detail="Not a valid email"
+        )
+    
+    if not is_strong_password(user.password):
+        
+        raise HTTPException(
+            status_code=400, detail="Password not strong"
+        )
+    
     try:
+
         # converting password to array of bytes
         hashed_password = hash_password(user.password)
 
-        new_user = User(username=user.username.lower(), hashed_password=hashed_password)
+        new_user = User(username=user.username.lower(), hashed_password=hashed_password, email=user.email)
 
         db.add(new_user)
         db.commit()
@@ -210,7 +233,7 @@ async def google_callback(request: Request, db: Session = Depends(get_db)) -> Us
     #Adds the user to the db if the user doesn't exist
     if not user_in_db:
         password = hash_password(user_email)
-        new_user = User(username=user_email, hashed_password=password)
+        new_user = User(username=user_email, hashed_password=password, email=user_email)
         db.add(new_user)
         db.commit()
         db.refresh(new_user)

@@ -14,5 +14,7 @@ deepgram_sdk==2.11.0
 nanoid==2.0.0
 Requests==2.31.0
 SQLAlchemy==2.0.21
-starlette==0.28.0
+starlette==0.27.0
 bcrypt==4.0.1
+mjml==0.9.1
+pystache==0.6.5
