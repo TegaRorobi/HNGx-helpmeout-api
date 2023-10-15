@@ -24,10 +24,10 @@ class User(Base):
     username: str = Column(
         String, index=True, unique=True, nullable=False, default=None
     )
+    email: Optional[str] = Column(String, nullable=True, default=None)
     hashed_password: str = Column(String, nullable=False)
     created_date: DateTime = Column(DateTime, server_default=func.now())
     updated_date: Optional[DateTime] = Column(DateTime, onupdate=func.now())
-    email: Optional[str] = Column(String, nullable=True, default=None)
     is_deleted: bool = Column(Boolean, default=False)
 
     # Add a unique constraint on 'username' and 'hashed_password' combination
