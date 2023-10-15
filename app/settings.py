@@ -1,5 +1,6 @@
 """ This file contains all the settings for the application. """
 import os
+import re
 from dotenv import load_dotenv
 
 
@@ -24,3 +25,5 @@ EMAIL_PORT = os.environ.get("EMAIL_PORT")
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
 GOOGLE_REDIRECT_URL = "https://cofucan.tech/srce/api/google/callback/"
+EMAIL_REGEX = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
+PASSWORD_REGEX = re.compile("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$")
