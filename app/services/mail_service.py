@@ -52,7 +52,7 @@ def send_video(username: str, video_id: str, recipient_address: str):
         smtp.send_message(msg)
 
 
-def send_otp(recipient_address: str, otp: str):
+def send_otp(recipient_address: str, otp: str, subject: str) -> None:
     """
     Sends an email to the user with the video embedded in the email.
 
@@ -64,8 +64,9 @@ def send_otp(recipient_address: str, otp: str):
         message (str): A message indicating whether the email was sent
             successfully.
     """
+    
     msg = EmailMessage()
-    msg["Subject"] = "Forgotten Helpmeout Password"
+    msg["Subject"] = subject
     msg["From"] = formataddr((EMAIL_NAME, EMAIL_ADDRESS))
     msg["To"] = recipient_address
 
@@ -84,3 +85,5 @@ def send_otp(recipient_address: str, otp: str):
         smtp.starttls(context=ssl.create_default_context())
         smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
         smtp.send_message(msg)
+    
+    return None

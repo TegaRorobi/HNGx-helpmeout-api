@@ -5,6 +5,7 @@ import os
 import re
 import subprocess
 from typing import Match
+import random
 
 import bcrypt
 import nanoid
@@ -526,3 +527,13 @@ def is_valid_path(path) -> bool:
             return False
 
     return True
+
+def get_otp()->int:
+    """
+    Generates an OTP 
+
+    Returns:
+        int: Generated OTP
+    """
+
+    return random.randint(100000, 999999)

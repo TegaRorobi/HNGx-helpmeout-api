@@ -1,5 +1,4 @@
 """ This module contains the routes for user authentication. """
-import random
 
 import bcrypt
 from fastapi import (
@@ -19,12 +18,15 @@ from app.models.user_models import (
     UserAuthentication,
     LogoutResponse,
     UpdateUsername,
+    UserRequest,
+    OtpResponse
 )
 from app.services.mail_service import send_otp
 from app.services.services import (
     hash_password,
     is_valid_email,
     is_strong_password,
+    get_otp
 )
 from app.settings import (
     GOOGLE_CLIENT_ID,
@@ -41,6 +43,43 @@ google_sso = GoogleSSO(
 )
 
 
+@auth_router.post("/get_signup_otp/", response_model=OtpResponse)
+async def get_signup_otp(
+    user: UserRequest, db: Session= Depends(get_db)
+) -> OtpResponse:
+    """
+    Sends OTP to a new user
+
+    Args:
+        user (UserAuthentication): The user authentication data.
+        db (Session, optional): The db session. Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: If the username is not unique.
+
+    Returns:
+        UserResponse: The response object.
+    """
+
+    if (
+        requested_user := db.query(User)
+        .filter_by(username=user.username.lower())
+        .first()
+    ):
+        raise HTTPException(status_code=404, detail="Username exists already.")
+    
+    otp = get_otp()
+
+
+    send_otp(recipient_address=user.email, otp=otp, subject="SIGNUP OTP")
+    
+    return OtpResponse(
+        status_code = 200, message = "OTP sent successfully",
+        username= user.username.lower(), verification_code = otp,
+    )
+
+
+    
 @auth_router.post("/signup/", response_model=UserResponse)
 async def signup_user(
     user: UserAuthentication, db: Session = Depends(get_db)
@@ -58,15 +97,6 @@ async def signup_user(
     Returns:
         UserResponse: The response object.
     """
-
-    if not user.email:
-        raise HTTPException(status_code=400, detail="Email field is empty")
-
-    if not is_valid_email(user.email):
-        raise HTTPException(status_code=400, detail="Not a valid email")
-
-    # if not is_strong_password(user.password):
-    #     raise HTTPException(status_code=400, detail="Password not strong")
 
     try:
         # converting password to array of bytes
@@ -91,7 +121,7 @@ async def signup_user(
 
     except IntegrityError as err:
         raise HTTPException(
-            status_code=400, detail="Username is not unique"
+            status_code=400, detail="Username exists already"
         ) from err
 
 
@@ -155,7 +185,9 @@ async def logout_user(_: Session = Depends(get_db)) -> LogoutResponse:
 
 
 @auth_router.post("/request_otp/")
-async def request_otp(username: str, db: Session = Depends(get_db)):
+async def request_otp(
+    username: str, db: Session = Depends(get_db)
+)->OtpResponse:
     """
     Sends a 6-digit code to the user's email address.
 
@@ -172,19 +204,17 @@ async def request_otp(username: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found.")
 
     # generate otp
-    otp = random.randint(100000, 999999)
+    otp = get_otp()
 
     # send otp to user's email address
-    send_otp(user.email, otp)
+    send_otp(recipient_address=user.email, otp=otp, subject="Forgotten Helpmeout Password")
 
     db.close()
 
-    return {
-        "status_code": 200,
-        "message": "OTP sent successfully",
-        "username": username.lower(),
-        "verification_code": otp,
-    }
+    return OtpResponse(
+        status_code = 200, message = "OTP sent successfully",
+        username= username.lower(), verification_code = otp,
+    )
 
 
 @auth_router.post("/change_password/")
