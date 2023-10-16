@@ -301,12 +301,17 @@ async def edit_username(
         raise HTTPException(status_code=404, detail="User not found")
 
     user.username = username_data.new_username
-    db.commit()
-    db.refresh(user)
-    db.close()
+    try:
+        db.commit()
+        db.refresh(user)
+        db.close()
 
-    return {
-        "new_username": user.username,
-        "status_code": 200,
-        "message": "Username updated successfully"
-    }
+        return {
+            "new_username": user.username,
+            "status_code": 200,
+            "message": "Username updated successfully"
+        }
+    except IntegrityError as err:
+        raise HTTPException(
+            status_code=400, detail="Sorry, that username is already taken. Please try another."
+        ) from err
