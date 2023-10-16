@@ -247,16 +247,30 @@ async def google_callback(
         )
 
     user_email = user.email
-    user_display_name = user.display_name.lower()
+    display_name = user.display_name.lower()
 
-    # Check if the user is in the database
-    user_in_db = db.query(User).filter_by(username=user_email).first()
+    # Check if a user with the given email exists
+    existing_user = db.query(User).filter_by(email=user_email).first()
 
-    # Adds the user to the db if the user doesn't exist
-    if not user_in_db:
+    # Add user to database if user doesn't exist
+    if not existing_user:
+        # Validate end ensure unique username
+        suffix = 1
+        unique_username = display_name
+
+        # Check if a user with the chosen username exists,
+        # or keep incrementing the suffix until a unique username is found
+        user_found = db.query(User).filter_by(username=unique_username).first()
+        while user_found:
+            suffix += 1
+            unique_username = f"{unique_username}_{suffix}"
+            user_found = db.query(User).filter_by(username=unique_username).first()
+
         password = hash_password(user_email)
         new_user = User(
-            username=user_email, hashed_password=password, email=user_email
+            email=user_email,
+            username=unique_username,
+            hashed_password=password,
         )
         db.add(new_user)
         db.commit()
@@ -266,5 +280,5 @@ async def google_callback(
     return UserResponse(
         status_code=200,
         message="User Logged in Successfully!",
-        username=user_display_name,
+        username=unique_username,
     )
