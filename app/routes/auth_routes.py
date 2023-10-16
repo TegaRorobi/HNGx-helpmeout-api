@@ -17,6 +17,7 @@ from app.models.user_models import (
     UserResponse,
     UserAuthentication,
     LogoutResponse,
+    UpdateUsername,
     UserRequest,
     OtpResponse
 )
@@ -253,6 +254,13 @@ async def change_password(
     )
 
 
+@auth_router.get("/google/login/")
+async def google_login():
+    """Generate login url and redirect"""
+    with google_sso:
+        return await google_sso.get_login_redirect()
+
+
 @auth_router.get("/google/callback/")
 async def google_callback(
     request: Request, db: Session = Depends(get_db)
@@ -277,16 +285,29 @@ async def google_callback(
         )
 
     user_email = user.email
-    user_display_name = user.display_name.lower()
+    display_name = user.display_name.lower()
 
-    # Check if the user is in the database
-    user_in_db = db.query(User).filter_by(username=user_email).first()
+    # Check if a user with the given email exists
+    existing_user = db.query(User).filter_by(email=user_email).first()
 
-    # Adds the user to the db if the user doesn't exist
-    if not user_in_db:
+    # Add user to database if user doesn't exist
+    if not existing_user:
+        # Validate end ensure unique username
+        suffix = 1
+
+        while (
+            user_found := db.query(User)
+            .filter_by(username=display_name)
+            .first()
+        ):
+            suffix += 1
+            display_name = f"{display_name}_{suffix}"
+
         password = hash_password(user_email)
         new_user = User(
-            username=user_email, hashed_password=password, email=user_email
+            email=user_email,
+            username=display_name,
+            hashed_password=password,
         )
         db.add(new_user)
         db.commit()
@@ -296,5 +317,31 @@ async def google_callback(
     return UserResponse(
         status_code=200,
         message="User Logged in Successfully!",
-        username=user_display_name,
+        username=new_user.username,
     )
+
+
+@auth_router.put("/username/{user_id}/")
+async def edit_username(
+    user_id: int, username_data: UpdateUsername, db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.username = username_data.new_username
+    try:
+        db.commit()
+        db.refresh(user)
+        db.close()
+
+        return {
+            "new_username": user.username,
+            "status_code": 200,
+            "message": "Username updated successfully"
+        }
+    except IntegrityError as err:
+        raise HTTPException(
+            status_code=400, detail="Sorry, that username is already taken. Please try another."
+        ) from err

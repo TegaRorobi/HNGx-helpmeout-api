@@ -49,6 +49,10 @@ class UserAuthentication(UserRequest):
     password: str
 
 
+class UpdateUsername(BaseModel):
+    new_username: str
+
+
 class UserResponse(BaseModel):
     """The user response model"""
 
