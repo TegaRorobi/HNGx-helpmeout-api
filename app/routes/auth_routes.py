@@ -265,13 +265,13 @@ async def google_callback(
         # Validate end ensure unique username
         suffix = 1
 
-        # Check if a user with the chosen username exists,
-        # or keep incrementing the suffix until a unique username is found
-        user_found = db.query(User).filter_by(username=display_name).first()
-        while user_found:
+        while (
+            user_found := db.query(User)
+            .filter_by(username=display_name)
+            .first()
+        ):
             suffix += 1
             display_name = f"{display_name}_{suffix}"
-            user_found = db.query(User).filter_by(username=display_name).first()
 
         password = hash_password(user_email)
         new_user = User(
