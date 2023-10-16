@@ -1,9 +1,7 @@
 """ This file contains all the settings for the application. """
 import os
 import re
-
 from dotenv import load_dotenv
-
 load_dotenv()
 
 DB_USER = "fastapi_user"
