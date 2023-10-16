@@ -45,7 +45,7 @@ google_sso = GoogleSSO(
 @auth_router.post("/get_signup_otp/", response_model=OtpResponse)
 async def get_signup_otp(
     user: UserRequest, db: Session= Depends(get_db)
-)-> OtpResponse:
+) -> OtpResponse:
     """
     Sends OTP to a new user
 
@@ -60,16 +60,16 @@ async def get_signup_otp(
         UserResponse: The response object.
     """
 
-    # check if user exists
-    requested_user = db.query(User).filter_by(username=user.username.lower()).first()
-
-    if requested_user:
+    if (
+        requested_user := db.query(User)
+        .filter_by(username=user.username.lower())
+        .first()
+    ):
         raise HTTPException(status_code=404, detail="Username exists already.")
     
-    #generate otp
     otp = get_otp()
 
-    #send otp to mail
+
     send_otp(recipient_address=user.email, otp=otp, subject="SIGNUP OTP")
     
     return OtpResponse(

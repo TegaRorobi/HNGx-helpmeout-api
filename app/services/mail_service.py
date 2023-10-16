@@ -52,7 +52,7 @@ def send_video(username: str, video_id: str, recipient_address: str):
         smtp.send_message(msg)
 
 
-def send_otp(recipient_address: str, otp: str, subject: str):
+def send_otp(recipient_address: str, otp: str, subject: str) -> None:
     """
     Sends an email to the user with the video embedded in the email.
 
@@ -85,3 +85,5 @@ def send_otp(recipient_address: str, otp: str, subject: str):
         smtp.starttls(context=ssl.create_default_context())
         smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
         smtp.send_message(msg)
+    
+    return None
