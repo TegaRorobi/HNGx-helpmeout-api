@@ -321,7 +321,7 @@ async def google_callback(
     )
 
 
-@auth_router.put("/edit_username/{user_id}/")
+@auth_router.put("/username/{user_id}/")
 async def edit_username(
     user_id: int, username_data: UpdateUsername, db: Session = Depends(get_db)
 ):
