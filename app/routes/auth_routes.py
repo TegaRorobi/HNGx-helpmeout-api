@@ -18,6 +18,7 @@ from app.models.user_models import (
     UserResponse,
     UserAuthentication,
     LogoutResponse,
+    UpdateUsername,
 )
 from app.services.mail_service import send_otp
 from app.services.services import (
@@ -288,3 +289,24 @@ async def google_callback(
         message="User Logged in Successfully!",
         username=new_user.username,
     )
+
+
+@auth_router.put("/edit_username/{user_id}/")
+async def edit_username(
+    user_id: int, username_data: UpdateUsername, db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.username = username_data.new_username
+    db.commit()
+    db.refresh(user)
+    db.close()
+
+    return {
+        "new_username": user.username,
+        "status_code": 200,
+        "message": "Username updated successfully"
+    }
