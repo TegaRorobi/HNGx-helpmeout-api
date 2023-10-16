@@ -223,6 +223,13 @@ async def change_password(
     )
 
 
+@auth_router.get("/google/login/")
+async def google_login():
+    """Generate login url and redirect"""
+    with google_sso:
+        return await google_sso.get_login_redirect()
+
+
 @auth_router.get("/google/callback/")
 async def google_callback(
     request: Request, db: Session = Depends(get_db)
@@ -256,20 +263,19 @@ async def google_callback(
     if not existing_user:
         # Validate end ensure unique username
         suffix = 1
-        unique_username = display_name
 
         # Check if a user with the chosen username exists,
         # or keep incrementing the suffix until a unique username is found
-        user_found = db.query(User).filter_by(username=unique_username).first()
+        user_found = db.query(User).filter_by(username=display_name).first()
         while user_found:
             suffix += 1
-            unique_username = f"{unique_username}_{suffix}"
-            user_found = db.query(User).filter_by(username=unique_username).first()
+            display_name = f"{display_name}_{suffix}"
+            user_found = db.query(User).filter_by(username=display_name).first()
 
         password = hash_password(user_email)
         new_user = User(
             email=user_email,
-            username=unique_username,
+            username=display_name,
             hashed_password=password,
         )
         db.add(new_user)
@@ -280,5 +286,5 @@ async def google_callback(
     return UserResponse(
         status_code=200,
         message="User Logged in Successfully!",
-        username=unique_username,
+        username=new_user.username,
     )
