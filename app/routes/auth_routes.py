@@ -19,14 +19,12 @@ from app.models.user_models import (
     LogoutResponse,
     UpdateUsername,
     UserRequest,
-    OtpResponse
+    OtpResponse,
 )
 from app.services.mail_service import send_otp
 from app.services.services import (
     hash_password,
-    is_valid_email,
-    is_strong_password,
-    get_otp
+    get_otp,
 )
 from app.settings import (
     GOOGLE_CLIENT_ID,
@@ -45,7 +43,7 @@ google_sso = GoogleSSO(
 
 @auth_router.post("/get_signup_otp/", response_model=OtpResponse)
 async def get_signup_otp(
-    user: UserRequest, db: Session= Depends(get_db)
+    user: UserRequest, db: Session = Depends(get_db)
 ) -> OtpResponse:
     """
     Sends OTP to a new user
@@ -67,19 +65,19 @@ async def get_signup_otp(
         .first()
     ):
         raise HTTPException(status_code=404, detail="Username exists already.")
-    
+
     otp = get_otp()
 
-
     send_otp(recipient_address=user.email, otp=otp, subject="SIGNUP OTP")
-    
+
     return OtpResponse(
-        status_code = 200, message = "OTP sent successfully",
-        username= user.username.lower(), verification_code = otp,
+        status_code=200,
+        message="OTP sent successfully",
+        username=user.username.lower(),
+        verification_code=otp,
     )
 
 
-    
 @auth_router.post("/signup/", response_model=UserResponse)
 async def signup_user(
     user: UserAuthentication, db: Session = Depends(get_db)
@@ -187,7 +185,7 @@ async def logout_user(_: Session = Depends(get_db)) -> LogoutResponse:
 @auth_router.post("/request_otp/")
 async def request_otp(
     username: str, db: Session = Depends(get_db)
-)->OtpResponse:
+) -> OtpResponse:
     """
     Sends a 6-digit code to the user's email address.
 
@@ -207,13 +205,19 @@ async def request_otp(
     otp = get_otp()
 
     # send otp to user's email address
-    send_otp(recipient_address=user.email, otp=otp, subject="Forgotten Helpmeout Password")
+    send_otp(
+        recipient_address=user.email,
+        otp=otp,
+        subject="Forgotten Helpmeout Password",
+    )
 
     db.close()
 
     return OtpResponse(
-        status_code = 200, message = "OTP sent successfully",
-        username= username.lower(), verification_code = otp,
+        status_code=200,
+        message="OTP sent successfully",
+        username=username.lower(),
+        verification_code=otp,
     )
 
 
@@ -339,9 +343,10 @@ async def edit_username(
         return {
             "new_username": user.username,
             "status_code": 200,
-            "message": "Username updated successfully"
+            "message": "Username updated successfully",
         }
     except IntegrityError as err:
         raise HTTPException(
-            status_code=400, detail="Sorry, that username is already taken. Please try another."
+            status_code=400,
+            detail="Sorry, that username is already taken. Please try another.",
         ) from err
