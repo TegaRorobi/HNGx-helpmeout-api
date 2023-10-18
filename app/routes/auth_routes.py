@@ -59,11 +59,7 @@ async def get_signup_otp(
         UserResponse: The response object.
     """
 
-    if (
-        requested_user := db.query(User)
-        .filter_by(username=user.username.lower())
-        .first()
-    ):
+    if db.query(User).filter_by(username=user.username.lower()).first():
         raise HTTPException(status_code=404, detail="Username exists already.")
 
     otp = get_otp()
@@ -125,7 +121,7 @@ async def signup_user(
 
 @auth_router.post("/login/", response_model=UserResponse)
 async def login_user(
-    user: UserAuthentication, request: Request, db: Session = Depends(get_db)
+    user: UserAuthentication, _: Request, db: Session = Depends(get_db)
 ) -> UserResponse:
     """
     Logs in a user. Login is not case sensitive
@@ -223,7 +219,7 @@ async def request_otp(
 
 @auth_router.post("/change_password/")
 async def change_password(
-    user: UserAuthentication, request: Request, db: Session = Depends(get_db)
+    user: UserAuthentication, _: Request, db: Session = Depends(get_db)
 ) -> UserResponse:
     """
     Changes the password of a user.
@@ -299,11 +295,7 @@ async def google_callback(
         # Validate end ensure unique username
         suffix = 1
 
-        while (
-            user_found := db.query(User)
-            .filter_by(username=display_name)
-            .first()
-        ):
+        while db.query(User).filter_by(username=display_name).first():
             suffix += 1
             display_name = f"{display_name}_{suffix}"
 
@@ -327,9 +319,24 @@ async def google_callback(
 
 @auth_router.put("/username/{user_id}/")
 async def edit_username(
-    user_id: int, username_data: UpdateUsername, db: Session = Depends(get_db)
+    username: str, username_data: UpdateUsername, db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(User.id == user_id).first()
+    """
+    Edits the username of a user.
+
+    Args:
+        username (str): The user's username.
+        username_data (UpdateUsername): The new username.
+        db (Session, optional): The db session. Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: If the username is not unique.
+        HTTPException: If the user is not found.
+
+    Returns:
+        _type_: _description_
+    """
+    user = db.query(User).filter(User.username == username).first()
 
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -348,5 +355,5 @@ async def edit_username(
     except IntegrityError as err:
         raise HTTPException(
             status_code=400,
-            detail="Sorry, that username is already taken. Please try another.",
+            detail="Sorry, the username is already taken. Please try another.",
         ) from err

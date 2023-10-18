@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
-from sqlalchemy import Column, Enum, String, DateTime, ForeignKey, Boolean
+from sqlalchemy import Column, Enum, String, DateTime, ForeignKey, Boolean, Float
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -25,6 +25,7 @@ class Video(Base):
     compressed_location: Optional[str] = Column(String, nullable=True)
     thumbnail_location: Optional[str] = Column(String, nullable=True)
     transcript_location: Optional[str] = Column(String, nullable=True)
+    video_length: Optional[int] = Column(Float, nullable=True)
     status: str = Column(
         Enum(
             "processing",
