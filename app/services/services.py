@@ -220,19 +220,19 @@ def create_directory(*args):
         None
     """
     for path in args:
-        if not is_valid_path(path):
-            raise ValueError("Invalid directory path")
-        # Use os.path.abspath to get an absolute path.
-        abs_path = os.path.abspath(path)
+        # if not is_valid_path(path):
+        #     raise ValueError("Invalid directory path")
+        # # Use os.path.abspath to get an absolute path.
+        # abs_path = os.path.abspath(path)
 
-        # Ensure the absolute path is within a safe directory.
-        # Our safe directory here is the media directory.
-        safe_root = os.path.abspath(MEDIA_DIR)
-        if not abs_path.startswith(safe_root):
-            raise ValueError("Path is not allowed")
+        # # Ensure the absolute path is within a safe directory.
+        # # Our safe directory here is the media directory.
+        # safe_root = os.path.abspath(MEDIA_DIR)
+        # if not abs_path.startswith(safe_root):
+        #     raise ValueError("Path is not allowed")
         # Create the directory if it doesn't exist.
-        if not os.path.isdir(abs_path):
-            os.makedirs(abs_path, exist_ok=True)
+        if not os.path.isdir(path):
+            os.makedirs(path, exist_ok=True)
 
 
 def save_blob(
@@ -430,6 +430,15 @@ def convert_to_json(transcript_data: dict, output_path: str) -> str:
 
 
 def hash_password(password: str) -> str:
+    """
+    Hashes a password.
+
+    Args:
+        password (str): The password to be hashed.
+
+    Returns:
+        str: The hashed password.
+    """
     pw_bytes = password.encode("utf-8")
 
     # generating the salt
@@ -502,7 +511,8 @@ def is_valid_path(path) -> bool:
     Returns:
         bool: True if the path is valid, False otherwise.
     """
-    # Define a regex pattern for an allowed directory name (alphanumeric, underscores and a single period).
+    # Define a regex pattern for an allowed directory name
+    # (alphanumeric, underscores and a single period).
     allowed_pattern = re.compile(r"^[a-zA-Z0-9_.]+$")
 
     # Ensure the path is a string and does not contain harmful characters.
@@ -528,9 +538,10 @@ def is_valid_path(path) -> bool:
 
     return True
 
-def get_otp()->int:
+
+def get_otp() -> int:
     """
-    Generates an OTP 
+    Generates an OTP
 
     Returns:
         int: Generated OTP
