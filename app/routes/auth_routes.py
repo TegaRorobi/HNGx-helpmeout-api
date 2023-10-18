@@ -61,7 +61,7 @@ async def get_signup_otp(
 
     if (
         requested_user := db.query(User)
-        .filter_by(username=user.username.lower())
+        .filter_by(username.lower()=user.username.lower())
         .first()
     ):
         raise HTTPException(status_code=404, detail="Username exists already.")
@@ -101,7 +101,7 @@ async def signup_user(
         hashed_password = hash_password(user.password)
 
         new_user = User(
-            username=user.username.lower(),
+            username=user.username,
             hashed_password=hashed_password,
             email=user.email,
         )
@@ -140,7 +140,7 @@ async def login_user(
     """
 
     needed_user = (
-        db.query(User).filter_by(username=user.username.lower()).first()
+        db.query(User).filter_by(username.lower()=user.username.lower()).first()
     )
 
     db.close()
@@ -196,7 +196,7 @@ async def request_otp(
         UserResponse: The response object.
     """
     # check if user exists
-    user = db.query(User).filter_by(username=username.lower()).first()
+    user = db.query(User).filter_by(username.lower()=username.lower()).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
@@ -236,7 +236,7 @@ async def change_password(
         UserResponse: The response object.
     """
     requested_user = (
-        db.query(User).filter_by(username=user.username.lower()).first()
+        db.query(User).filter_by(username.lower()=user.username.lower()).first()
     )
 
     if not requested_user:
