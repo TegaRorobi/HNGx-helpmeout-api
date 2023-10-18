@@ -61,7 +61,7 @@ async def get_signup_otp(
 
     if (
         requested_user := db.query(User)
-        .filter_by(username.lower()=user.username.lower())
+        .filter_by(username=user.username.lower())
         .first()
     ):
         raise HTTPException(status_code=404, detail="Username exists already.")
@@ -101,7 +101,7 @@ async def signup_user(
         hashed_password = hash_password(user.password)
 
         new_user = User(
-            username=user.username,
+            username=user.username.lower(),
             hashed_password=hashed_password,
             email=user.email,
         )
@@ -140,7 +140,7 @@ async def login_user(
     """
 
     needed_user = (
-        db.query(User).filter_by(username.lower()=user.username.lower()).first()
+        db.query(User).filter_by(username=user.username.lower()).first()
     )
 
     db.close()
@@ -196,7 +196,7 @@ async def request_otp(
         UserResponse: The response object.
     """
     # check if user exists
-    user = db.query(User).filter_by(username.lower()=username.lower()).first()
+    user = db.query(User).filter_by(username=username.lower()).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
@@ -223,7 +223,7 @@ async def request_otp(
 
 @auth_router.post("/change_password/")
 async def change_password(
-    user: UserAuthentication, _: Request, db: Session = Depends(get_db)
+    user: UserAuthentication, request: Request, db: Session = Depends(get_db)
 ) -> UserResponse:
     """
     Changes the password of a user.
@@ -236,7 +236,7 @@ async def change_password(
         UserResponse: The response object.
     """
     requested_user = (
-        db.query(User).filter_by(username.lower()=user.username.lower()).first()
+        db.query(User).filter_by(username=user.username.lower()).first()
     )
 
     if not requested_user:
@@ -299,7 +299,11 @@ async def google_callback(
         # Validate end ensure unique username
         suffix = 1
 
-        while _ := db.query(User).filter_by(username=display_name).first():
+        while (
+            user_found := db.query(User)
+            .filter_by(username=display_name)
+            .first()
+        ):
             suffix += 1
             display_name = f"{display_name}_{suffix}"
 
@@ -321,26 +325,11 @@ async def google_callback(
     )
 
 
-@auth_router.put("/username/{username}/")
+@auth_router.put("/username/{user_id}/")
 async def edit_username(
-    username: str, username_data: UpdateUsername, db: Session = Depends(get_db)
+    user_id: int, username_data: UpdateUsername, db: Session = Depends(get_db)
 ):
-    """
-    Updates the username of a user.
-
-    Args:
-        username (str): The user's username.
-        username_data (UpdateUsername): The new username.
-        db (Session, optional): The db session. Defaults to Depends(get_db).
-
-    Raises:
-        HTTPException: If the username is not unique.
-        HTTPException: If the user is not found.
-
-    Returns:
-        _type_: _description_
-    """
-    user = db.query(User).filter(User.username == username).first()
+    user = db.query(User).filter(User.id == user_id).first()
 
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -359,5 +348,5 @@ async def edit_username(
     except IntegrityError as err:
         raise HTTPException(
             status_code=400,
-            detail="Sorry, the username is already taken. Please try another.",
+            detail="Sorry, that username is already taken. Please try another.",
         ) from err
