@@ -9,7 +9,7 @@
    <mj-section background-color="#fff" padding-bottom="20px" padding-top="20px">
      <mj-section>
        <mj-column>
-         <mj-image align="center" alt="" type="Unit" border="none" height="auto" href="" padding-bottom="0px" padding-left="50px" padding-right="50px" padding-top="40px" padding="10px 25px" src="https://www.mailjet.com/wp-content/uploads/2019/07/Welcome-02.png" target="_blank" title="" width="300px">
+         <mj-image align="center" alt="" type="Unit" border="none" height="auto" href="" padding-bottom="0px" padding-left="50px" padding-right="50px" padding-top="40px" padding="10px 25px" src="https://github.com/hngx-org/helpmeout-api/blob/send-email/app/services/images/welcome%20image.png?raw=true" target="_blank" title="" width="300px">
          </mj-image>
        </mj-column>
    </mj-section>
