@@ -64,7 +64,7 @@ def send_otp(recipient_address: str, otp: str, subject: str) -> None:
         message (str): A message indicating whether the email was sent
             successfully.
     """
-    
+
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = formataddr((EMAIL_NAME, EMAIL_ADDRESS))
@@ -85,5 +85,5 @@ def send_otp(recipient_address: str, otp: str, subject: str) -> None:
         smtp.starttls(context=ssl.create_default_context())
         smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
         smtp.send_message(msg)
-    
+
     return None

@@ -8,6 +8,7 @@ from fastapi import (
     Request,
 )
 from fastapi_sso.sso.google import GoogleSSO
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -60,11 +61,11 @@ async def get_signup_otp(
     """
 
     if (
-        requested_user := db.query(User)
-        .filter_by(username=user.username.lower())
-        .first()
+        db.query(User).filter(func.lower(User.username)
+                              == func.lower(user.username)).first()
     ):
-        raise HTTPException(status_code=404, detail="Username exists already.")
+
+        raise HTTPException(status_code=409, detail="Username exists already.")
 
     otp = get_otp()
 
@@ -95,32 +96,32 @@ async def signup_user(
     Returns:
         UserResponse: The response object.
     """
+    if (
+        db.query(User).filter(func.lower(User.username)
+                              == func.lower(user.username)).first()
+    ):
 
-    try:
-        # converting password to array of bytes
-        hashed_password = hash_password(user.password)
+        raise HTTPException(status_code=409, detail="Username exists already.")
 
-        new_user = User(
-            username=user.username.lower(),
-            hashed_password=hashed_password,
-            email=user.email,
-        )
+    # converting password to array of bytes
+    hashed_password = hash_password(user.password)
 
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-        db.close()
+    new_user = User(
+        username=user.username,
+        hashed_password=hashed_password,
+        email=user.email,
+    )
 
-        return UserResponse(
-            message="User registered successfully",
-            status_code=201,
-            username=user.username.lower(),
-        )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    db.close()
 
-    except IntegrityError as err:
-        raise HTTPException(
-            status_code=400, detail="Username exists already"
-        ) from err
+    return UserResponse(
+        message="User registered successfully",
+        status_code=201,
+        username=user.username.lower(),
+    )
 
 
 @auth_router.post("/login/", response_model=UserResponse)
@@ -140,13 +141,14 @@ async def login_user(
     """
 
     needed_user = (
-        db.query(User).filter_by(username=user.username.lower()).first()
+        db.query(User).filter(func.lower(User.username)
+                              == func.lower(user.username)).first()
     )
 
     db.close()
 
     if not needed_user:
-        raise HTTPException(status_code=401, detail="Invalid Username")
+        raise HTTPException(status_code=404, detail="Invalid Username")
 
     # converting password to array of bytes
     provided_password = user.password
@@ -165,23 +167,6 @@ async def login_user(
         raise HTTPException(status_code=401, detail="Invalid Password.")
 
 
-@auth_router.post("/logout/")
-async def logout_user(_: Session = Depends(get_db)) -> LogoutResponse:
-    """
-    Logs out a user.
-
-    Args:
-        _ (Session, optional): The db session. Defaults to Depends(get_db).
-
-    Returns:
-        LogoutResponse: The response object.
-    """
-
-    return LogoutResponse(
-        status_code=200, message="User Logged out successfully"
-    )
-
-
 @auth_router.post("/request_otp/")
 async def request_otp(
     username: str, db: Session = Depends(get_db)
@@ -196,7 +181,8 @@ async def request_otp(
         UserResponse: The response object.
     """
     # check if user exists
-    user = db.query(User).filter_by(username=username.lower()).first()
+    user = db.query(User).filter(func.lower(User.username)
+                                 == func.lower(user.username)).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
@@ -236,7 +222,7 @@ async def change_password(
         UserResponse: The response object.
     """
     requested_user = (
-        db.query(User).filter_by(username=user.username.lower()).first()
+            db.query(User).filter(func.lower(User.username) == func.lower(user.username)).first()
     )
 
     if not requested_user:
@@ -325,28 +311,44 @@ async def google_callback(
     )
 
 
-@auth_router.put("/username/{user_id}/")
+# An endpoint ti edit a username given the username
+@auth_router.put("/username/{username}/")
 async def edit_username(
-    user_id: int, username_data: UpdateUsername, db: Session = Depends(get_db)
-):
-    user = db.query(User).filter(User.id == user_id).first()
+        username: str, new_username: str, db: Session = Depends(get_db)
+) -> UserResponse:
+    """
+    Edits a user's username.
+    
+    Args:
+        username (str): The user's username.
+        db: The db session. Defaults to Depends(get_db).
 
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+    Returns:
+        UserResponse: The response object.
+    
+    Raises:
+        HTTPException: If the username is not unique.
+    """
+    
+    user = db.query(User).filter(func.lower(User.username) == func.lower(username)).first()
 
-    user.username = username_data.new_username
-    try:
-        db.commit()
-        db.refresh(user)
-        db.close()
+    if not user:
+        raise HTTPException(status_code=404, detail="user not found")
 
-        return {
-            "new_username": user.username,
-            "status_code": 200,
-            "message": "Username updated successfully",
-        }
-    except IntegrityError as err:
-        raise HTTPException(
-            status_code=400,
-            detail="Sorry, that username is already taken. Please try another.",
-        ) from err
+    if (
+        db.query(User).filter(func.lower(User.username)
+                              == func.lower(new_username)).first()
+    ):
+        raise HTTPException(status_code=409, detail="username exists already.")
+
+    user.username = new_username
+
+    db.commit()
+    db.refresh(user)
+    db.close()
+
+    return {
+        "username": user.username,
+        "status_code": 200,
+        "message": "username updated successfully",
+    }

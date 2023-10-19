@@ -67,6 +67,7 @@ class LogoutResponse(BaseModel):
     message: str
     status_code: int
 
+
 class OtpResponse(BaseModel):
     """The OTP response model"""
     status_code: int
