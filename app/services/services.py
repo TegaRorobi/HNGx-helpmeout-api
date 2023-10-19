@@ -16,7 +16,6 @@ from fastapi import Request
 from app.database import get_db
 from app.models.video_models import Video
 from app.settings import (
-    MEDIA_DIR,
     VIDEO_DIR,
     DEEPGRAM_API_KEY,
     EMAIL_REGEX,

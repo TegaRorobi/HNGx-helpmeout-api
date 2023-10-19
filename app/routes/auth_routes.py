@@ -9,7 +9,6 @@ from fastapi import (
 )
 from fastapi_sso.sso.google import GoogleSSO
 from sqlalchemy import func
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -17,8 +16,6 @@ from app.models.user_models import (
     User,
     UserResponse,
     UserAuthentication,
-    LogoutResponse,
-    UpdateUsername,
     UserRequest,
     OtpResponse,
 )
@@ -182,7 +179,7 @@ async def request_otp(
     """
     # check if user exists
     user = db.query(User).filter(func.lower(User.username)
-                                 == func.lower(user.username)).first()
+                                 == func.lower(username)).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
@@ -222,7 +219,8 @@ async def change_password(
         UserResponse: The response object.
     """
     requested_user = (
-            db.query(User).filter(func.lower(User.username) == func.lower(user.username)).first()
+        db.query(User).filter(func.lower(User.username)
+                              == func.lower(user.username)).first()
     )
 
     if not requested_user:
@@ -318,19 +316,20 @@ async def edit_username(
 ) -> UserResponse:
     """
     Edits a user's username.
-    
+
     Args:
         username (str): The user's username.
         db: The db session. Defaults to Depends(get_db).
 
     Returns:
         UserResponse: The response object.
-    
+
     Raises:
         HTTPException: If the username is not unique.
     """
-    
-    user = db.query(User).filter(func.lower(User.username) == func.lower(username)).first()
+
+    user = db.query(User).filter(func.lower(User.username)
+                                 == func.lower(username)).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="user not found")
