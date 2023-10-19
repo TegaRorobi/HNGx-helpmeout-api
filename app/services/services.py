@@ -69,6 +69,9 @@ def process_video(
         # Extract audio from the video
         audio_location = extract_audio(file_location, audio_location, "mp3")
 
+        # Get the length of the video
+        video_length = get_video_length(file_location)
+
         # Generate transcript using external API
         transcript_location = asyncio.run(
             generate_transcript(
@@ -87,6 +90,7 @@ def process_video(
         raise HTTPException(status_code=500, detail=str(err)) from err
 
     # Update the video status and save the transcript location
+    video.video_length = video_length
     video.transcript_location = transcript_location
     video.thumbnail_location = thumbnail_location
     video.status = "completed"
@@ -152,6 +156,27 @@ def compress_video(
     subprocess.run(command, check=True)
 
     return output_path
+
+
+def get_video_length(video_path: str) -> float:
+    """
+    Gets the length of a video in seconds.
+
+    Args:
+        video_path: The path to the video.
+
+    Returns:
+        float: The length of the video in seconds.
+    """
+    command = ["ffprobe", "-v", "error", "-show_entries", "format=duration"]
+    result = subprocess.run(
+        command + [video_path],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    return float(result.stdout.split("\n")[1].split("=")[1])
 
 
 def extract_thumbnail(

@@ -123,7 +123,7 @@ async def signup_user(
 
 @auth_router.post("/login/", response_model=UserResponse)
 async def login_user(
-    user: UserAuthentication, request: Request, db: Session = Depends(get_db)
+    user: UserAuthentication, _: Request, db: Session = Depends(get_db)
 ) -> UserResponse:
     """
     Logs in a user. Login is not case sensitive
@@ -206,7 +206,7 @@ async def request_otp(
 
 @auth_router.post("/change_password/")
 async def change_password(
-    user: UserAuthentication, request: Request, db: Session = Depends(get_db)
+    user: UserAuthentication, _: Request, db: Session = Depends(get_db)
 ) -> UserResponse:
     """
     Changes the password of a user.
@@ -283,11 +283,7 @@ async def google_callback(
         # Validate end ensure unique username
         suffix = 1
 
-        while (
-            user_found := db.query(User)
-            .filter_by(username=display_name)
-            .first()
-        ):
+        while db.query(User).filter_by(username=display_name).first():
             suffix += 1
             display_name = f"{display_name}_{suffix}"
 
@@ -319,6 +315,7 @@ async def edit_username(
 
     Args:
         username (str): The user's username.
+        new_username (str): The user's new username
         db: The db session. Defaults to Depends(get_db).
 
     Returns:

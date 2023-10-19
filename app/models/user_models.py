@@ -50,6 +50,7 @@ class UserAuthentication(UserRequest):
 
 
 class UpdateUsername(BaseModel):
+    """ The update username model """
     new_username: str
 
 
