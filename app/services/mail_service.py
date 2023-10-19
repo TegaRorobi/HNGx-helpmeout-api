@@ -23,7 +23,7 @@ def send_video(username: str, video_id: str, recipient_address: str):
     Parameters:
         username (str): The username of the sender.
         video_id (str): The ID of the video to be sent to the user.
-        recipient_address (str): The email address of the user to send the video to.
+        recipient_address (str): The email address where video will be sent.
 
     Returns:
         message (str): A message indicating whether the email was sent
@@ -64,7 +64,7 @@ def send_otp(recipient_address: str, otp: str, subject: str) -> None:
         message (str): A message indicating whether the email was sent
             successfully.
     """
-    
+
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = formataddr((EMAIL_NAME, EMAIL_ADDRESS))
@@ -85,5 +85,5 @@ def send_otp(recipient_address: str, otp: str, subject: str) -> None:
         smtp.starttls(context=ssl.create_default_context())
         smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
         smtp.send_message(msg)
-    
+
     return None
