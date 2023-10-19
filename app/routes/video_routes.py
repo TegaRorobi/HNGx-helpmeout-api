@@ -264,7 +264,7 @@ def get_video(video_id: str, request: Request, db: Session = Depends(get_db)):
     return video
 
 
-@video_router.get("/video/{video_id}.mp4")
+@video_router.get("/stream/{video_id}")
 def stream_video(video_id: str, db: Session = Depends(get_db)):
     """
     Stream a video by its video ID.
@@ -328,7 +328,7 @@ def download_video(video_id: str, db: Session = Depends(get_db)):
     )
 
 
-@video_router.get("/transcript/{video_id}.json")
+@video_router.get("/transcript/{video_id}")
 def get_transcript(video_id: str, db: Session = Depends(get_db)):
     """
     Get the transcript for a video by its video ID.
@@ -355,7 +355,7 @@ def get_transcript(video_id: str, db: Session = Depends(get_db)):
     return FileResponse(video.transcript_location, media_type="text/plain")
 
 
-@video_router.get("/thumbnail/{video_id}.jpeg")
+@video_router.get("/thumbnail/{video_id}")
 def get_thumbnail(video_id: str, db: Session = Depends(get_db)):
     """
     Get the thumbnail for a video by its video ID.
