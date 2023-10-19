@@ -62,7 +62,7 @@ async def get_signup_otp(
                               == func.lower(user.username)).first()
     ):
 
-        raise HTTPException(status_code=409, detail="Username exists already.")
+        raise HTTPException(status_code=409, detail="Username already exists.")
 
     otp = get_otp()
 
