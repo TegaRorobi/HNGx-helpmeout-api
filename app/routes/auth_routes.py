@@ -21,7 +21,7 @@ from app.models.user_models import (
     UserRequest,
     OtpResponse,
 )
-from app.services.mail_service import send_otp
+from app.services.mail_service import send_otp, send_welcome_mail
 from app.services.services import (
     hash_password,
     get_otp,
@@ -106,6 +106,8 @@ async def signup_user(
         db.commit()
         db.refresh(new_user)
         db.close()
+
+        send_welcome_mail(user.email, user.username)
 
         return UserResponse(
             message="User registered successfully",
