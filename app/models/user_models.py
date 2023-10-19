@@ -50,6 +50,7 @@ class UserAuthentication(UserRequest):
 
 
 class UpdateUsername(BaseModel):
+    """ The update username model """
     new_username: str
 
 
@@ -66,6 +67,7 @@ class LogoutResponse(BaseModel):
 
     message: str
     status_code: int
+
 
 class OtpResponse(BaseModel):
     """The OTP response model"""
