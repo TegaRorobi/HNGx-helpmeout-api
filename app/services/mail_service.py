@@ -23,7 +23,7 @@ def send_video(username: str, video_id: str, recipient_address: str):
     Parameters:
         username (str): The username of the sender.
         video_id (str): The ID of the video to be sent to the user.
-        recipient_address (str): The email address where cideo will be sent.
+        recipient_address (str): The email address where video will be sent.
 
     Returns:
         message (str): A message indicating whether the email was sent
