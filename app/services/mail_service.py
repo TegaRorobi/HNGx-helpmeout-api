@@ -64,7 +64,7 @@ def send_otp(recipient_address: str, otp: str, subject: str) -> None:
         message (str): A message indicating whether the email was sent
             successfully.
     """
-    
+
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = formataddr((EMAIL_NAME, EMAIL_ADDRESS))
@@ -85,5 +85,43 @@ def send_otp(recipient_address: str, otp: str, subject: str) -> None:
         smtp.starttls(context=ssl.create_default_context())
         smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
         smtp.send_message(msg)
-    
+
+    return None
+
+
+def send_welcome_mail(recipient_address: str, username: str) -> None:
+    """
+    Sends a welcome email to a new user.
+
+    Parameters:
+        recipient_address (str): The email address of the recipient.
+        username (str): The username of the sender.
+        otp (str): The one-time password (OTP) for the new user.
+
+    Returns:
+        message (str): A message indicating whether the email was sent
+        successfully.
+    """
+
+    msg = EmailMessage()
+    msg["Subject"] = f"Hello {username}, welcome!"
+    msg["From"] = formataddr((EMAIL_NAME, EMAIL_ADDRESS))
+    msg["To"] = recipient_address
+
+    with open("app/services/welcome.mjml", "rb") as file:
+        mail = mjml_to_html(file)
+
+    mail = mail.html
+    context = {
+        "first_name": username,
+    }
+    mail = pystache.render(mail, context)
+
+    msg.set_content(mail, subtype="html")
+
+    with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as smtp:
+        smtp.starttls(context=ssl.create_default_context())
+        smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+        smtp.send_message(msg)
+
     return None
