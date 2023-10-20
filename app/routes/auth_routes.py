@@ -2,6 +2,7 @@
 
 import bcrypt
 from fastapi import (
+    BackgroundTasks,
     Depends,
     HTTPException,
     APIRouter,
@@ -78,12 +79,14 @@ async def get_signup_otp(
 
 @auth_router.post("/signup/", response_model=UserResponse)
 async def signup_user(
+    background_tasks: BackgroundTasks,
     user: UserAuthentication, db: Session = Depends(get_db)
 ) -> UserResponse:
     """
     Registers a new user. Registration is not case sensitive.
 
     Args:
+        background_tasks (BackgroundTasks): The background tasks object.
         user (UserAuthentication): The user authentication data.
         db (Session, optional): The db session. Defaults to Depends(get_db).
 
@@ -114,7 +117,11 @@ async def signup_user(
     db.refresh(new_user)
     db.close()
 
-    send_welcome_mail(user.email, user.username)
+    background_tasks.add_task(
+        send_welcome_mail,
+        user.email,
+        user.username
+    )
 
     return UserResponse(
         message="User registered successfully",
