@@ -8,8 +8,8 @@ import requests
 # Configuration
 # VIDEO_FILE_PATH = "/home/cofucan/Videos/test_rec.mkv"
 VIDEO_FILE_PATH = "/home/destinedcodes/video2.mp4"
-LOCAL_URL = "http://127.0.0.1:8000/srce/api"
-REMOTE_URL = "https://helpmeout.cofucan.tech/srce/api"
+LOCAL_URL = "http://127.0.0.1:8000"
+REMOTE_URL = "https://api.helpmeout.tech"
 
 if sys.argv[1] == "--local":
     URL = LOCAL_URL
