@@ -26,7 +26,7 @@ from app.services.services import (
     is_owner,
 )
 
-video_router = APIRouter(prefix="/srce/api")
+video_router = APIRouter(prefix="")
 
 
 @video_router.post("/start-recording/")

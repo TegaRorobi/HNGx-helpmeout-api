@@ -30,7 +30,7 @@ from app.settings import (
     GOOGLE_REDIRECT_URL,
 )
 
-BASE_URL = "/srce/api"
+BASE_URL = ""
 
 auth_router = APIRouter(prefix=BASE_URL)
 
@@ -165,7 +165,7 @@ async def login_user(
         raise HTTPException(status_code=401, detail="Invalid Password.")
 
 
-@auth_router.post("/request_otp/")
+@auth_router.post("/request-otp/")
 async def request_otp(
     username: str, db: Session = Depends(get_db)
 ) -> OtpResponse:
