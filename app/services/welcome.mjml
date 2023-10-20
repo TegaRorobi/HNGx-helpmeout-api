@@ -15,8 +15,8 @@
    </mj-section>
 
      <mj-column vertical-align="middle" width="100%">
-       <mj-text align="center" font-size="20px" font-family="Work Sans" padding-left="25px" padding-right="25px">Welcome <b> ((var:first_name)) !</b><br/> We are so happy to have you on board.</mj-text>
-       <mj-button align="center" font-size="18px"background-color="#120B48" color="#fff" font-family="Work Sans" href="{{LINK}}">Get started</mj-button>
+       <mj-text align="center" font-size="20px" font-family="Work Sans" padding-left="25px" padding-right="25px">Welcome <b> {{username}} !</b><br/> We are so happy to have you on board.</mj-text>
+       <mj-button align="center" font-size="18px"background-color="#120B48" color="#fff" font-family="Work Sans" href="{{link}}">Get started</mj-button>
        <mj-text align="center" font-size="16px" font-family="Work Sans" padding-left="25px" color="#5E5E5E" padding-right="25px">You can check out <a href="/" style="color:#120B48">tutorials</a> to get the most out of HelpMeOut.</mj-text>
        <mj-text align="center" font-size="16px" font-family="Work Sans" padding-left="25px" color="#5E5E5E" padding-top="5px" padding-right="25px">Happy onboarding!</mj-text>
      </mj-column>
