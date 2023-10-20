@@ -104,7 +104,7 @@ def send_welcome_mail(recipient_address: str, username: str) -> None:
     """
 
     msg = EmailMessage()
-    msg["Subject"] = f"Hello {username}, welcome!"
+    msg["Subject"] = "Welcome, welcome, welcome!"
     msg["From"] = formataddr((EMAIL_NAME, EMAIL_ADDRESS))
     msg["To"] = recipient_address
 
@@ -113,7 +113,8 @@ def send_welcome_mail(recipient_address: str, username: str) -> None:
 
     mail = mail.html
     context = {
-        "first_name": username,
+        "username": username,
+        "link": "https://helpmeout-dev.vercel.app/"
     }
     mail = pystache.render(mail, context)
 
