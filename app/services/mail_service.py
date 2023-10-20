@@ -96,7 +96,6 @@ def send_welcome_mail(recipient_address: str, username: str) -> None:
     Parameters:
         recipient_address (str): The email address of the recipient.
         username (str): The username of the sender.
-        otp (str): The one-time password (OTP) for the new user.
 
     Returns:
         message (str): A message indicating whether the email was sent
