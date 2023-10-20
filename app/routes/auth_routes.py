@@ -19,7 +19,7 @@ from app.models.user_models import (
     UserRequest,
     OtpResponse,
 )
-from app.services.mail_service import send_otp
+from app.services.mail_service import send_otp, send_welcome_mail
 from app.services.services import (
     hash_password,
     get_otp,
@@ -114,12 +114,13 @@ async def signup_user(
     db.refresh(new_user)
     db.close()
 
+    send_welcome_mail(user.email, user.username)
+
     return UserResponse(
         message="User registered successfully",
         status_code=201,
         username=user.username.lower(),
     )
-
 
 @auth_router.post("/login/", response_model=UserResponse)
 async def login_user(

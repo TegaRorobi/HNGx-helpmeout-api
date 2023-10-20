@@ -87,3 +87,41 @@ def send_otp(recipient_address: str, otp: str, subject: str) -> None:
         smtp.send_message(msg)
 
     return None
+
+
+def send_welcome_mail(recipient_address: str, username: str) -> None:
+    """
+    Sends a welcome email to a new user.
+
+    Parameters:
+        recipient_address (str): The email address of the recipient.
+        username (str): The username of the sender.
+
+    Returns:
+        message (str): A message indicating whether the email was sent
+        successfully.
+    """
+
+    msg = EmailMessage()
+    msg["Subject"] = "Welcome, welcome, welcome!"
+    msg["From"] = formataddr((EMAIL_NAME, EMAIL_ADDRESS))
+    msg["To"] = recipient_address
+
+    with open("app/services/welcome.mjml", "rb") as file:
+        mail = mjml_to_html(file)
+
+    mail = mail.html
+    context = {
+        "username": username,
+        "link": "https://helpmeout-dev.vercel.app/"
+    }
+    mail = pystache.render(mail, context)
+
+    msg.set_content(mail, subtype="html")
+
+    with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as smtp:
+        smtp.starttls(context=ssl.create_default_context())
+        smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+        smtp.send_message(msg)
+
+    return None
