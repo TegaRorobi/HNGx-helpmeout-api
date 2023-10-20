@@ -129,6 +129,7 @@ async def signup_user(
         username=user.username.lower(),
     )
 
+
 @auth_router.post("/login/", response_model=UserResponse)
 async def login_user(
     user: UserAuthentication, _: Request, db: Session = Depends(get_db)
@@ -284,10 +285,10 @@ async def google_callback(
     display_name = user.display_name.lower()
 
     # Check if a user with the given email exists
-    existing_user = db.query(User).filter_by(email=user_email).first()
+    current_user = db.query(User).filter_by(email=user_email).first()
 
     # Add user to database if user doesn't exist
-    if not existing_user:
+    if not current_user:
         # Validate end ensure unique username
         suffix = 1
 
@@ -296,20 +297,21 @@ async def google_callback(
             display_name = f"{display_name}_{suffix}"
 
         password = hash_password(user_email)
-        new_user = User(
+        current_user = User(
             email=user_email,
             username=display_name,
             hashed_password=password,
         )
-        db.add(new_user)
+
+        db.add(current_user)
         db.commit()
-        db.refresh(new_user)
+        db.refresh(current_user)
         db.close()
 
     return UserResponse(
         status_code=200,
         message="User Logged in Successfully!",
-        username=new_user.username,
+        username=current_user.username,
     )
 
 
