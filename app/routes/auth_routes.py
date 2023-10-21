@@ -261,12 +261,14 @@ async def google_login():
 
 @auth_router.get("/google/callback/")
 async def google_callback(
+    background_tasks: BackgroundTasks,
     request: Request, db: Session = Depends(get_db)
 ) -> UserResponse:
     """
     Process Login response from Google and return user info
 
     Args:
+        background_tasks: The background tasks object.
         request: The HTTPS request object
         db: The database session object
 
@@ -307,6 +309,12 @@ async def google_callback(
         db.commit()
         db.refresh(current_user)
         db.close()
+
+        background_tasks.add_task(
+            send_welcome_mail,
+            current_user.email,
+            current_user.username
+        )
 
     return UserResponse(
         status_code=200,
