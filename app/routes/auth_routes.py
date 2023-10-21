@@ -41,7 +41,7 @@ google_sso = GoogleSSO(
 )
 
 
-@auth_router.post("/get_signup_otp/", response_model=OtpResponse)
+@auth_router.post("/get-signup-otp/", response_model=OtpResponse)
 async def get_signup_otp(
     user: UserRequest, db: Session = Depends(get_db)
 ) -> OtpResponse:
@@ -214,7 +214,7 @@ async def request_otp(
     )
 
 
-@auth_router.post("/change_password/")
+@auth_router.post("/change-password/")
 async def change_password(
     user: UserAuthentication, _: Request, db: Session = Depends(get_db)
 ) -> UserResponse:
