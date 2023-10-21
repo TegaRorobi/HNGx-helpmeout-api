@@ -190,8 +190,8 @@ def get_videos(username: str, request: Request, db: Session = Depends(get_db)):
     """
 
     videos = (
-        db.query(User).filter(func.lower(Video.username)
-                              == func.lower(username)).first()
+        db.query(Video).filter(func.lower(Video.username)
+                              == func.lower(username)).all()
     )
 
     if not videos:
