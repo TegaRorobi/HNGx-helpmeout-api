@@ -12,6 +12,7 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.database import get_db
 from app.models.user_models import User
@@ -188,7 +189,10 @@ def get_videos(username: str, request: Request, db: Session = Depends(get_db)):
             username, with downloadable URLs instead of absolute paths.
     """
 
-    videos = db.query(Video).filter(Video.username == username).all()
+    videos = (
+        db.query(User).filter(func.lower(Video.username)
+                              == func.lower(username)).first()
+    )
 
     if not videos:
         raise HTTPException(
@@ -486,7 +490,7 @@ def delete_video(video_id: str, db: Session = Depends(get_db)):
     raise HTTPException(status_code=404, detail="Video not found.")
 
 
-# An endpoint to send a video to user's email using fastapi-mail
+# An endpoint to send a video to user's email
 @video_router.post("/send-email/{video_id}")
 def send_email(
     video_id: str,

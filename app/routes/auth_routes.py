@@ -71,7 +71,7 @@ async def get_signup_otp(
     return OtpResponse(
         status_code=200,
         message="OTP sent successfully",
-        username=user.username.lower(),
+        username=user.username,
         verification_code=otp,
     )
 
@@ -119,7 +119,7 @@ async def signup_user(
     return UserResponse(
         message="User registered successfully",
         status_code=201,
-        username=user.username.lower(),
+        username=user.username,
     )
 
 @auth_router.post("/login/", response_model=UserResponse)
@@ -159,7 +159,7 @@ async def login_user(
         return UserResponse(
             status_code=200,
             message="Login Successful",
-            username=user.username.lower(),
+            username=user.username,
         )
     else:
         raise HTTPException(status_code=401, detail="Invalid Password.")
@@ -200,7 +200,7 @@ async def request_otp(
     return OtpResponse(
         status_code=200,
         message="OTP sent successfully",
-        username=username.lower(),
+        username=username,
         verification_code=otp,
     )
 
@@ -239,7 +239,7 @@ async def change_password(
     return UserResponse(
         status_code=200,
         message="Password changed successfully",
-        username=user.username.lower(),
+        username=user.username,
     )
 
 
