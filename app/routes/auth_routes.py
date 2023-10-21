@@ -1,5 +1,6 @@
 """ This module contains the routes for user authentication. """
 
+import random
 import bcrypt
 from fastapi import (
     BackgroundTasks,
@@ -290,11 +291,10 @@ async def google_callback(
     # Add user to database if user doesn't exist
     if not current_user:
         # Validate end ensure unique username
-        suffix = 1
-
         while db.query(User).filter_by(username=display_name).first():
-            suffix += 1
-            display_name = f"{display_name}_{suffix}"
+            # Generate a random six-digit number
+            random_suffix = random.randint(100000, 999999)
+            display_name = f"{display_name}_{random_suffix}"
 
         password = hash_password(user_email)
         current_user = User(
