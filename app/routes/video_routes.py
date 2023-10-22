@@ -2,8 +2,11 @@
 import base64
 import datetime
 import os
-
+from fastapi import Query
+from sqlalchemy import desc
 import math
+
+
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -11,11 +14,9 @@ from fastapi import (
     HTTPException,
     Request,
 )
-from fastapi import Query
 from fastapi.responses import FileResponse, RedirectResponse
-from sqlalchemy import desc
-from sqlalchemy import func
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.database import get_db
 from app.models.user_models import User
@@ -194,14 +195,16 @@ def get_videos(
         db (Session): The database session.
 
     Returns:
-        dict: A dictionary containing the list of Video objects for the requested page, along with pagination information.
+        dict: A dictionary containing the list of Video objects for the
+        requested page, along with pagination information.
     """
     items_per_page: int = 6
 
     # Calculate the offset to skip items on previous pages
     offset = (page - 1) * items_per_page
 
-    # Query the database with pagination and sorting by creation date in descending order
+    # Query the database with pagination and sorting by creation date in
+    # descending order
     videos = (
         db.query(Video)
         .filter(func.lower(Video.username) == func.lower(username))
@@ -255,7 +258,9 @@ def search_videos(
     db: Session = Depends(get_db),
 ):
     """
-    Search for videos associated with the given username based on a search query in the video title with pagination support and sorting from most recent to least recent.
+    Search for videos associated with the given username based on a search
+    query in the video title with pagination support and sorting from most
+    recent to least recent.
 
     Parameters:
         username (str): The username for which to search for videos.
@@ -265,7 +270,8 @@ def search_videos(
         db (Session): The database session.
 
     Returns:
-        dict: A dictionary containing the list of Video objects for the requested page, along with pagination information.
+        dict: A dictionary containing the list of Video objects for the
+        requested page, along with pagination information.
     """
 
     items_per_page: int = 6
@@ -273,7 +279,8 @@ def search_videos(
     # Calculate the offset to skip items on previous pages
     offset = (page - 1) * items_per_page
 
-    # Query the database with pagination and sorting by creation date in descending order
+    # Query the database with pagination and sorting by creation date in
+    # descending order
     videos = (
         db.query(Video)
         .filter(func.lower(Video.username) == func.lower(username))
