@@ -3,6 +3,7 @@ import base64
 import datetime
 import os
 
+import math
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -10,9 +11,11 @@ from fastapi import (
     HTTPException,
     Request,
 )
+from fastapi import Query
 from fastapi.responses import FileResponse, RedirectResponse
-from sqlalchemy.orm import Session
+from sqlalchemy import desc
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user_models import User
@@ -175,30 +178,48 @@ def upload_video_blob(
 
 
 @video_router.get("/recording/user/{username}")
-def get_videos(username: str, request: Request, db: Session = Depends(get_db)):
+def get_videos(
+    username: str,
+    request: Request,
+    page: int = Query(default=1, ge=1),
+    db: Session = Depends(get_db),
+):
     """
     Returns a list of videos associated with the given username.
 
     Parameters:
-        request: The request object
-        username (str): The username for which to retrieve the videos.
+        username (str): The username for which to search for videos.
+        page (int): The page number (default: 1).
         request (Request): The FastAPI request object.
         db (Session): The database session.
 
     Returns:
-        List[Video]: A list of Video objects associated with the given
-            username, with downloadable URLs instead of absolute paths.
+        dict: A dictionary containing the list of Video objects for the requested page, along with pagination information.
     """
+    items_per_page: int = 6
 
+    # Calculate the offset to skip items on previous pages
+    offset = (page - 1) * items_per_page
+
+    # Query the database with pagination and sorting by creation date in descending order
     videos = (
         db.query(Video)
         .filter(func.lower(Video.username) == func.lower(username))
+        .order_by(desc(Video.created_date))
+        .offset(offset)
+        .limit(items_per_page)
         .all()
+    )
+
+    total_videos = (
+        db.query(Video)
+        .filter(func.lower(Video.username) == func.lower(username))
+        .count()
     )
 
     if not videos:
         raise HTTPException(
-            status_code=404, detail="No videos found for the given username."
+            status_code=404, detail="No videos found for this user."
         )
 
     db.close()
@@ -216,7 +237,87 @@ def get_videos(username: str, request: Request, db: Session = Depends(get_db)):
             request.url_for("get_transcript", video_id=video_id)
         )
 
-    return videos
+    return {
+        "total_items": total_videos,
+        "items_per_page": items_per_page,
+        "page": page,
+        "total_pages": math.ceil(total_videos / items_per_page),
+        "videos": videos,
+    }
+
+
+@video_router.get("/search/user/{username}")
+def search_videos(
+    username: str,
+    video_name: str,
+    request: Request,
+    page: int = Query(default=1, ge=1),
+    db: Session = Depends(get_db),
+):
+    """
+    Search for videos associated with the given username based on a search query in the video title with pagination support and sorting from most recent to least recent.
+
+    Parameters:
+        username (str): The username for which to search for videos.
+        video_name (str): The video title search query.
+        page (int): The page number (default: 1).
+        request (Request): The FastAPI request object.
+        db (Session): The database session.
+
+    Returns:
+        dict: A dictionary containing the list of Video objects for the requested page, along with pagination information.
+    """
+
+    items_per_page: int = 6
+
+    # Calculate the offset to skip items on previous pages
+    offset = (page - 1) * items_per_page
+
+    # Query the database with pagination and sorting by creation date in descending order
+    videos = (
+        db.query(Video)
+        .filter(func.lower(Video.username) == func.lower(username))
+        .filter(func.lower(Video.title).like(f"%{video_name.lower()}%"))
+        .order_by(desc(Video.created_date))
+        .offset(offset)
+        .limit(items_per_page)
+        .all()
+    )
+
+    total_videos = (
+        db.query(Video)
+        .filter(func.lower(Video.username) == func.lower(username))
+        .filter(func.lower(Video.title).like(f"%{video_name.lower()}%"))
+        .count()
+    )
+
+    if not videos:
+        raise HTTPException(
+            status_code=404, detail="No matching videos found for this user."
+        )
+
+    db.close()
+
+    # Replace the absolute paths with downloadable URLs
+    for video in videos:
+        video_id = video.id
+        video.original_location = str(
+            request.url_for("stream_video", video_id=video_id)
+        )
+        video.thumbnail_location = str(
+            request.url_for("get_thumbnail", video_id=video_id)
+        )
+        video.transcript_location = str(
+            request.url_for("get_transcript", video_id=video_id)
+        )
+
+    return {
+        "total_items": total_videos,
+        "items_per_page": items_per_page,
+        "page": page,
+        "total_pages": math.ceil(total_videos / items_per_page),
+        "videos": videos,
+    }
 
 
 @video_router.get("/recording/{video_id}")
@@ -294,7 +395,9 @@ def stream_video(video_id: str, db: Session = Depends(get_db)):
     if video.status == "processing":
         raise HTTPException(status_code=404, detail="Video not ready.")
 
-    return FileResponse(video.original_location, media_type=f"video/{VIDEO_MIME_TYPE}")
+    return FileResponse(
+        video.original_location, media_type=f"video/{VIDEO_MIME_TYPE}"
+    )
 
 
 @video_router.get("/download/{video_id}")
