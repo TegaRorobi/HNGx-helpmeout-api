@@ -61,12 +61,14 @@ async def get_signup_otp(
         db.query(User).filter(func.lower(User.username)
                               == func.lower(user.username)).first()
     ):
-
         raise HTTPException(status_code=409, detail="Username already exists.")
 
     otp = get_otp()
 
-    send_otp(recipient_address=user.email, otp=otp, subject="SIGNUP OTP")
+    try:
+        send_otp(recipient_address=user.email, otp=otp, subject="SIGNUP OTP")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Failed to send mail")
 
     return OtpResponse(
         status_code=200,
@@ -97,7 +99,6 @@ async def signup_user(
         db.query(User).filter(func.lower(User.username)
                               == func.lower(user.username)).first()
     ):
-
         raise HTTPException(status_code=409, detail="Username exists already.")
 
     # converting password to array of bytes
@@ -109,12 +110,15 @@ async def signup_user(
         email=user.email,
     )
 
+    try:
+        send_welcome_mail(user.email, user.username)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Failed to send mail")
+
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     db.close()
-
-    send_welcome_mail(user.email, user.username)
 
     return UserResponse(
         message="User registered successfully",
@@ -159,7 +163,7 @@ async def login_user(
         return UserResponse(
             status_code=200,
             message="Login Successful",
-            username=user.username,
+            username=needed_user.username,
         )
     else:
         raise HTTPException(status_code=401, detail="Invalid Password.")
@@ -182,25 +186,31 @@ async def request_otp(
     user = db.query(User).filter(func.lower(User.username)
                                  == func.lower(username)).first()
 
+    db.close()
+
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
+
+    if not user.email:
+        raise HTTPException(status_code=400, detail="User has no email.")
 
     # generate otp
     otp = get_otp()
 
     # send otp to user's email address
-    send_otp(
-        recipient_address=user.email,
-        otp=otp,
-        subject="Forgotten Helpmeout Password",
-    )
-
-    db.close()
+    try:
+        send_otp(
+            recipient_address=user.email,
+            otp=otp,
+            subject="Forgotten Helpmeout Password",
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Failed to send mail")
 
     return OtpResponse(
         status_code=200,
         message="OTP sent successfully",
-        username=username,
+        username=user.username,
         verification_code=otp,
     )
 
@@ -229,6 +239,8 @@ async def change_password(
             status_code=404, message="User not found", data=None
         )
 
+    username = requested_user.username
+
     new_password = hash_password(user.password)
 
     requested_user.hashed_password = new_password
@@ -239,7 +251,7 @@ async def change_password(
     return UserResponse(
         status_code=200,
         message="Password changed successfully",
-        username=user.username,
+        username=username,
     )
 
 
