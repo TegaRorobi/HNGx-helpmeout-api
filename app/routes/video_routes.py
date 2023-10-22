@@ -26,6 +26,7 @@ from app.services.services import (
     hash_password,
     is_owner,
 )
+from app.settings import VIDEO_MIME_TYPE
 
 video_router = APIRouter(prefix="")
 
@@ -293,7 +294,7 @@ def stream_video(video_id: str, db: Session = Depends(get_db)):
     if video.status == "processing":
         raise HTTPException(status_code=404, detail="Video not ready.")
 
-    return FileResponse(video.original_location, media_type="video/mp4")
+    return FileResponse(video.original_location, media_type=f"video/{VIDEO_MIME_TYPE}")
 
 
 @video_router.get("/download/{video_id}")
@@ -328,8 +329,8 @@ def download_video(video_id: str, db: Session = Depends(get_db)):
 
     return FileResponse(
         video.original_location,
-        media_type="video/mp4",
-        filename=f"{video.title}.mp4",
+        media_type=f"video/{VIDEO_MIME_TYPE}",
+        filename=f"{video.title}.{VIDEO_MIME_TYPE}",
     )
 
 

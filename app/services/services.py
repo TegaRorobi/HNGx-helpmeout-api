@@ -21,6 +21,7 @@ from app.settings import (
     EMAIL_REGEX,
     PASSWORD_REGEX,
 )
+from app.settings import VIDEO_MIME_TYPE
 
 
 def process_video(
@@ -142,7 +143,7 @@ def extract_audio(input_path: str, output_path: str, mimetype: str) -> str:
 
 
 def compress_video(
-    input_path: str, output_path: str, extension: str = "mp4"
+    input_path: str, output_path: str, extension: str = VIDEO_MIME_TYPE
 ) -> str:
     """
     Compresses a video using ffmpeg.
@@ -294,7 +295,7 @@ def save_blob(
     create_directory(user_dir, video_dir)
 
     # Save the blob
-    blob_filename = f"{blob_index}.mp4"
+    blob_filename = f"{blob_index}.{VIDEO_MIME_TYPE}"
     blob_path = os.path.join(video_dir, blob_filename)
     with open(blob_path, "wb") as f:
         f.write(blob)
@@ -320,7 +321,7 @@ def merge_blobs(username: str, video_id: str) -> str | None:
 
     # List all blob files and sort them by their sequence ID
     blob_files = sorted(
-        glob.glob(os.path.join(temp_video_dir, "*.mp4")),
+        glob.glob(os.path.join(temp_video_dir, f"*.{VIDEO_MIME_TYPE}")),
         key=lambda x: int(os.path.splitext(os.path.basename(x))[0]),
     )
 
@@ -329,7 +330,7 @@ def merge_blobs(username: str, video_id: str) -> str | None:
         return None
 
     # Merge the blobs
-    merged_video_path = os.path.join(temp_video_dir, f"{video_id}.mp4")
+    merged_video_path = os.path.join(temp_video_dir, f"{video_id}.{VIDEO_MIME_TYPE}")
     with open(merged_video_path, "wb") as merged_file:
         for blob_file in blob_files:
             with open(blob_file, "rb") as f:
