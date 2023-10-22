@@ -11,6 +11,7 @@ DB_PORT = 3306
 DB_NAME = "helpmeout"
 DB_TYPE = "sqlite"
 VIDEO_MIME_TYPE = "webm"
+AUDIO_MIME_TYPE = "opus"
 MEDIA_DIR = "./media"
 VIDEO_DIR = f"{MEDIA_DIR}/uploads/"
 COMPRESSED_DIR = f"{MEDIA_DIR}/compressed/"

@@ -21,7 +21,7 @@ from app.settings import (
     EMAIL_REGEX,
     PASSWORD_REGEX,
 )
-from app.settings import VIDEO_MIME_TYPE
+from app.settings import VIDEO_MIME_TYPE, AUDIO_MIME_TYPE
 
 
 def process_video(
@@ -71,12 +71,12 @@ def process_video(
         video_length = get_video_length(file_location)
 
         # Extract audio from the video
-        if not os.path.isfile(f"{audio_location}.mp3"):
+        if not os.path.isfile(f"{audio_location}.{AUDIO_MIME_TYPE}"):
             audio_location = extract_audio(
-                file_location, audio_location, "mp3"
+                file_location, audio_location, f"{AUDIO_MIME_TYPE}"
             )
         else:
-            audio_location = f"{audio_location}.mp3"
+            audio_location = f"{audio_location}.{AUDIO_MIME_TYPE}"
 
         # Generate transcript using external API
         if not os.path.isfile(f"{transcript_location}.json"):
@@ -126,17 +126,30 @@ def extract_audio(input_path: str, output_path: str, mimetype: str) -> str:
     """
 
     output_path = f"{output_path}.{mimetype}"
-    command = [
-        "ffmpeg",
-        "-i",
-        input_path,
-        "-vn",
-        "-c:a",
-        "libmp3lame",
-        "-b:a",
-        "12k",
-        output_path,
-    ]
+    if mimetype == "opus":
+        command = [
+            "ffmpeg",
+            "-i",
+            input_path,
+            "-vn",
+            "-c:a",
+            "libopus",
+            "-b:a",
+            "6k",
+            output_path,
+        ]
+    else:
+        command = [
+            "ffmpeg",
+            "-i",
+            input_path,
+            "-vn",
+            "-c:a",
+            "libmp3lame",
+            "-b:a",
+            "12k",
+            output_path,
+        ]
     subprocess.run(command, check=True)
 
     return output_path
@@ -381,7 +394,8 @@ async def generate_transcript(
     params = {"punctuate": True, "tier": "enhanced", "utterances": True}
     # params = {'smart_format': True, 'utterances': True}
     with open(audio_file, "rb") as audio:
-        source = {"buffer": audio, "mimetype": "audio/mp3"}
+        # Mimetype should be opus for audio files
+        source = {"buffer": audio, "mimetype": f"audio/{AUDIO_MIME_TYPE}"}
 
         response: dict = deepgram.transcription.sync_prerecorded(
             source, params
