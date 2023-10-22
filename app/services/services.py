@@ -66,23 +66,37 @@ def process_video(
     )
 
     try:
-        # Extract audio from the video
-        audio_location = extract_audio(file_location, audio_location, "mp3")
-
         # Get the length of the video
         video_length = get_video_length(file_location)
 
-        # Generate transcript using external API
-        transcript_location = asyncio.run(
-            generate_transcript(
-                audio_location, transcript_location, DEEPGRAM_API_KEY, "json"
+        # Extract audio from the video
+        if not os.path.isfile(f"{audio_location}.mp3"):
+            audio_location = extract_audio(
+                file_location, audio_location, "mp3"
             )
-        )
+        else:
+            audio_location = f"{audio_location}.mp3"
+
+        # Generate transcript using external API
+        if not os.path.isfile(f"{transcript_location}.json"):
+            transcript_location = asyncio.run(
+                generate_transcript(
+                    audio_location,
+                    transcript_location,
+                    DEEPGRAM_API_KEY,
+                    "json",
+                )
+            )
+        else:
+            transcript_location = f"{transcript_location}.json"
 
         # Extract thumbnail from compressed video
-        thumbnail_location = extract_thumbnail(
-            file_location, thumbnail_location, "jpg"
-        )
+        if not os.path.isfile(f"{thumbnail_location}.jpg"):
+            thumbnail_location = extract_thumbnail(
+                file_location, thumbnail_location, "jpg"
+            )
+        else:
+            thumbnail_location = f"{thumbnail_location}.jpg"
 
     except Exception as err:
         # Update the video status to `failed` if an error occurs
