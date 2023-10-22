@@ -36,15 +36,15 @@
     
 <mj-column width="100%">
   <mj-image
-    src="https://www.cofucan.tech/srce/api/thumbnail/{{video_id}}.jpeg"
+    src="https://api.helpmeout.tech/thumbnail/{{video_id}}.jpeg"
     alt="Video Thumbnail"
     width="370px"
     height="auto"
-    href="https://helpmeout-dev.vercel.app/videos/{{video_id}}"
+    href="https://helpmeout.tech/videos/{{video_id}}"
   />
 
   <mj-raw>
-    <a href="https://helpmeout-dev.vercel.app/videos/{{video_id}}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2;">
+    <a href="https://helpmeout.tech/videos/{{video_id}}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2;">
       <img src="https://e.hypermatic.com/6840c2f13ab3524ba1aa590af2b7a50c.png" alt="Play Button" style="width: 30px; height: 30px;" />
     </a>
   </mj-raw>
@@ -53,7 +53,7 @@
     
       <!--  Download Button -->
    <mj-column width="100%">
-  <mj-button href="https://www.cofucan.tech/srce/api/download/{{video_id}}" background-color="#120B48" color="#fff">
+  <mj-button href="https://api.helpmeout.tech/download/{{video_id}}" background-color="#120B48" color="#fff">
     <mj-image src="icon-url.png" alt="Download" width="20px" height="20px" align="middle" />
     <mj-text>Download video</mj-text>
   </mj-button>
@@ -79,7 +79,7 @@
           HelpMeOut
         </mj-text>
         <mj-text align="center" color="#130A48" font-size="12px">
-          <a href="https://www.helpmeout.com" style="text-decoration: none;">www.helpmeout.com</a>
+          <a href="https://helpmeout.tech" style="text-decoration: none;">www.helpmeout.tech</a>
         </mj-text>
       </mj-column>
     </mj-section>

@@ -113,7 +113,7 @@ def send_welcome_mail(recipient_address: str, username: str) -> None:
     mail = mail.html
     context = {
         "username": username,
-        "link": "https://helpmeout-dev.vercel.app/"
+        "link": "https://helpmeout.tech"
     }
     mail = pystache.render(mail, context)
 

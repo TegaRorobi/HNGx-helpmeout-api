@@ -4,8 +4,8 @@ const path = require('path');
 
 // Configuration
 const VIDEO_FILE_PATH = '/home/cofucan/Videos/proj_demo.mp4';
-const LOCAL_URL = 'http://127.0.0.1:8000/srce/api';
-const REMOTE_URL = 'http://web-02.cofucan.tech/srce/api';
+const LOCAL_URL = 'http://127.0.0.1:8000';
+const REMOTE_URL = 'http://api.helpmeout.tech';
 const BLOB_SIZE = 1 * 1024 * 1024;  // 1MB by default. Adjust as needed.
 const USERNAME = 'user13';
 
