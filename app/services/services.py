@@ -1,3 +1,4 @@
+""" This module contains helper functions for the application. """
 import asyncio
 import glob
 import json
@@ -156,7 +157,7 @@ def extract_audio(input_path: str, output_path: str, mimetype: str) -> str:
 
 
 def compress_video(
-    input_path: str, output_path: str, extension: str = VIDEO_MIME_TYPE
+    input_path: str, output_path: str, extension: str = "webm"
 ) -> str:
     """
     Compresses a video using ffmpeg.
@@ -329,12 +330,12 @@ def merge_blobs(username: str, video_id: str) -> str | None:
     """
     user_dir = os.path.join(VIDEO_DIR, username)
     user_dir = os.path.abspath(user_dir)
-    temp_video_dir = os.path.join(user_dir, video_id)
-    temp_video_dir = os.path.abspath(temp_video_dir)
+    video_dir = os.path.join(user_dir, video_id)
+    video_dir = os.path.abspath(video_dir)
 
     # List all blob files and sort them by their sequence ID
     blob_files = sorted(
-        glob.glob(os.path.join(temp_video_dir, f"*.{VIDEO_MIME_TYPE}")),
+        glob.glob(os.path.join(video_dir, f"*.{VIDEO_MIME_TYPE}")),
         key=lambda x: int(os.path.splitext(os.path.basename(x))[0]),
     )
 
@@ -343,13 +344,13 @@ def merge_blobs(username: str, video_id: str) -> str | None:
         return None
 
     # Merge the blobs
-    merged_video_path = os.path.join(temp_video_dir, f"{video_id}.{VIDEO_MIME_TYPE}")
-    with open(merged_video_path, "wb") as merged_file:
+    merged_video = os.path.join(video_dir, f"{video_id}.{VIDEO_MIME_TYPE}")
+    with open(merged_video, "wb") as merged_file:
         for blob_file in blob_files:
             with open(blob_file, "rb") as f:
                 merged_file.write(f.read())
 
-    return merged_video_path
+    return merged_video
 
 
 def generate_id() -> str:
