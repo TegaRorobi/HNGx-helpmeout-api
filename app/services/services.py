@@ -1,3 +1,4 @@
+""" This module contains helper functions for the application. """
 import asyncio
 import glob
 import json
@@ -21,6 +22,7 @@ from app.settings import (
     EMAIL_REGEX,
     PASSWORD_REGEX,
 )
+from app.settings import VIDEO_MIME_TYPE, AUDIO_MIME_TYPE
 
 
 def process_video(
@@ -66,23 +68,37 @@ def process_video(
     )
 
     try:
-        # Extract audio from the video
-        audio_location = extract_audio(file_location, audio_location, "mp3")
-
         # Get the length of the video
         video_length = get_video_length(file_location)
 
-        # Generate transcript using external API
-        transcript_location = asyncio.run(
-            generate_transcript(
-                audio_location, transcript_location, DEEPGRAM_API_KEY, "json"
+        # Extract audio from the video
+        if not os.path.isfile(f"{audio_location}.{AUDIO_MIME_TYPE}"):
+            audio_location = extract_audio(
+                file_location, audio_location, f"{AUDIO_MIME_TYPE}"
             )
-        )
+        else:
+            audio_location = f"{audio_location}.{AUDIO_MIME_TYPE}"
+
+        # Generate transcript using external API
+        if not os.path.isfile(f"{transcript_location}.json"):
+            transcript_location = asyncio.run(
+                generate_transcript(
+                    audio_location,
+                    transcript_location,
+                    DEEPGRAM_API_KEY,
+                    "json",
+                )
+            )
+        else:
+            transcript_location = f"{transcript_location}.json"
 
         # Extract thumbnail from compressed video
-        thumbnail_location = extract_thumbnail(
-            file_location, thumbnail_location, "jpg"
-        )
+        if not os.path.isfile(f"{thumbnail_location}.jpg"):
+            thumbnail_location = extract_thumbnail(
+                file_location, thumbnail_location, "jpg"
+            )
+        else:
+            thumbnail_location = f"{thumbnail_location}.jpg"
 
     except Exception as err:
         # Update the video status to `failed` if an error occurs
@@ -111,24 +127,37 @@ def extract_audio(input_path: str, output_path: str, mimetype: str) -> str:
     """
 
     output_path = f"{output_path}.{mimetype}"
-    command = [
-        "ffmpeg",
-        "-i",
-        input_path,
-        "-vn",
-        "-c:a",
-        "libmp3lame",
-        "-b:a",
-        "12k",
-        output_path,
-    ]
+    if mimetype == "opus":
+        command = [
+            "ffmpeg",
+            "-i",
+            input_path,
+            "-vn",
+            "-c:a",
+            "libopus",
+            "-b:a",
+            "6k",
+            output_path,
+        ]
+    else:
+        command = [
+            "ffmpeg",
+            "-i",
+            input_path,
+            "-vn",
+            "-c:a",
+            "libmp3lame",
+            "-b:a",
+            "12k",
+            output_path,
+        ]
     subprocess.run(command, check=True)
 
     return output_path
 
 
 def compress_video(
-    input_path: str, output_path: str, extension: str = "mp4"
+    input_path: str, output_path: str, extension: str = "webm"
 ) -> str:
     """
     Compresses a video using ffmpeg.
@@ -280,7 +309,7 @@ def save_blob(
     create_directory(user_dir, video_dir)
 
     # Save the blob
-    blob_filename = f"{blob_index}.mp4"
+    blob_filename = f"{blob_index}.{VIDEO_MIME_TYPE}"
     blob_path = os.path.join(video_dir, blob_filename)
     with open(blob_path, "wb") as f:
         f.write(blob)
@@ -301,12 +330,12 @@ def merge_blobs(username: str, video_id: str) -> str | None:
     """
     user_dir = os.path.join(VIDEO_DIR, username)
     user_dir = os.path.abspath(user_dir)
-    temp_video_dir = os.path.join(user_dir, video_id)
-    temp_video_dir = os.path.abspath(temp_video_dir)
+    video_dir = os.path.join(user_dir, video_id)
+    video_dir = os.path.abspath(video_dir)
 
     # List all blob files and sort them by their sequence ID
     blob_files = sorted(
-        glob.glob(os.path.join(temp_video_dir, "*.mp4")),
+        glob.glob(os.path.join(video_dir, f"*.{VIDEO_MIME_TYPE}")),
         key=lambda x: int(os.path.splitext(os.path.basename(x))[0]),
     )
 
@@ -315,13 +344,13 @@ def merge_blobs(username: str, video_id: str) -> str | None:
         return None
 
     # Merge the blobs
-    merged_video_path = os.path.join(temp_video_dir, f"{video_id}.mp4")
-    with open(merged_video_path, "wb") as merged_file:
+    merged_video = os.path.join(video_dir, f"{video_id}.{VIDEO_MIME_TYPE}")
+    with open(merged_video, "wb") as merged_file:
         for blob_file in blob_files:
             with open(blob_file, "rb") as f:
                 merged_file.write(f.read())
 
-    return merged_video_path
+    return merged_video
 
 
 def generate_id() -> str:
@@ -366,7 +395,8 @@ async def generate_transcript(
     params = {"punctuate": True, "tier": "enhanced", "utterances": True}
     # params = {'smart_format': True, 'utterances': True}
     with open(audio_file, "rb") as audio:
-        source = {"buffer": audio, "mimetype": "audio/mp3"}
+        # Mimetype should be opus for audio files
+        source = {"buffer": audio, "mimetype": f"audio/{AUDIO_MIME_TYPE}"}
 
         response: dict = deepgram.transcription.sync_prerecorded(
             source, params
