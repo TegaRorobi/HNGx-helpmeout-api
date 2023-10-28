@@ -1,16 +1,25 @@
-""" The video models """""
+""" The video models """ ""
 from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
-from sqlalchemy import Column, Enum, String, DateTime, ForeignKey, Boolean, Float
+from sqlalchemy import (
+    Column,
+    Enum,
+    String,
+    DateTime,
+    ForeignKey,
+    Boolean,
+    Float,
+)
 from sqlalchemy.orm import relationship
 
 from app.database import Base
 
 
 class Video(Base):
-    """ The video model """
+    """The video model"""
+
     __tablename__ = "videos"
 
     id: str = Column(String, primary_key=True, unique=True, nullable=False)
@@ -42,7 +51,8 @@ class Video(Base):
 
 
 class VideoBlob(BaseModel):
-    """ The video blob model """
+    """The video blob model"""
+
     username: str
     video_id: str
     blob_index: int
