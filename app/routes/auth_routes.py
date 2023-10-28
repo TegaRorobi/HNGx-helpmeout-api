@@ -1,7 +1,9 @@
 """ This module contains the routes for user authentication. """
 
+import random
 import bcrypt
 from fastapi import (
+    BackgroundTasks,
     Depends,
     HTTPException,
     APIRouter,
@@ -80,12 +82,14 @@ async def get_signup_otp(
 
 @auth_router.post("/signup/", response_model=UserResponse)
 async def signup_user(
+    background_tasks: BackgroundTasks,
     user: UserAuthentication, db: Session = Depends(get_db)
 ) -> UserResponse:
     """
     Registers a new user. Registration is not case sensitive.
 
     Args:
+        background_tasks (BackgroundTasks): The background tasks object.
         user (UserAuthentication): The user authentication data.
         db (Session, optional): The db session. Defaults to Depends(get_db).
 
@@ -120,11 +124,18 @@ async def signup_user(
     db.refresh(new_user)
     db.close()
 
+    background_tasks.add_task(
+        send_welcome_mail,
+        user.email,
+        user.username
+    )
+
     return UserResponse(
         message="User registered successfully",
         status_code=201,
         username=user.username,
     )
+
 
 @auth_router.post("/login/", response_model=UserResponse)
 async def login_user(
@@ -264,12 +275,14 @@ async def google_login():
 
 @auth_router.get("/google/callback/")
 async def google_callback(
+    background_tasks: BackgroundTasks,
     request: Request, db: Session = Depends(get_db)
 ) -> UserResponse:
     """
     Process Login response from Google and return user info
 
     Args:
+        background_tasks: The background tasks object.
         request: The HTTPS request object
         db: The database session object
 
@@ -289,32 +302,38 @@ async def google_callback(
     display_name = user.display_name.lower()
 
     # Check if a user with the given email exists
-    existing_user = db.query(User).filter_by(email=user_email).first()
+    current_user = db.query(User).filter_by(email=user_email).first()
 
     # Add user to database if user doesn't exist
-    if not existing_user:
+    if not current_user:
         # Validate end ensure unique username
-        suffix = 1
-
         while db.query(User).filter_by(username=display_name).first():
-            suffix += 1
-            display_name = f"{display_name}_{suffix}"
+            # Generate a random six-digit number
+            random_suffix = random.randint(100000, 999999)
+            display_name = f"{display_name}_{random_suffix}"
 
         password = hash_password(user_email)
-        new_user = User(
+        current_user = User(
             email=user_email,
             username=display_name,
             hashed_password=password,
         )
-        db.add(new_user)
+
+        db.add(current_user)
         db.commit()
-        db.refresh(new_user)
+        db.refresh(current_user)
         db.close()
+
+        background_tasks.add_task(
+            send_welcome_mail,
+            current_user.email,
+            current_user.username
+        )
 
     return UserResponse(
         status_code=200,
         message="User Logged in Successfully!",
-        username=new_user.username,
+        username=current_user.username,
     )
 
 
